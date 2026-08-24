@@ -1,0 +1,117 @@
+package com.dominiqueherbrigpersonalteam.lademonitor.data.local
+
+import androidx.room.Dao
+import androidx.room.Delete
+import androidx.room.Query
+import androidx.room.Upsert
+
+@Dao
+interface VehicleDao {
+    @Query("SELECT * FROM vehicles WHERE pendingDelete = 0 ORDER BY createdAt")
+    suspend fun getAllUndeleted(): List<LocalVehicle>
+
+    @Query("SELECT * FROM vehicles")
+    suspend fun getAll(): List<LocalVehicle>
+
+    @Query("SELECT * FROM vehicles WHERE serverId = :id OR localId = :id LIMIT 1")
+    suspend fun find(id: String): LocalVehicle?
+
+    @Query("SELECT * FROM vehicles WHERE serverId = :serverId LIMIT 1")
+    suspend fun findByServerId(serverId: String): LocalVehicle?
+
+    @Query("SELECT * FROM vehicles WHERE isDirty = 1")
+    suspend fun getDirty(): List<LocalVehicle>
+
+    @Upsert
+    suspend fun upsert(vehicle: LocalVehicle)
+
+    @Delete
+    suspend fun delete(vehicle: LocalVehicle)
+
+    @Query("DELETE FROM vehicles")
+    suspend fun clear()
+}
+
+@Dao
+interface ProviderDao {
+    @Query("SELECT * FROM providers WHERE pendingDelete = 0 ORDER BY createdAt")
+    suspend fun getAllUndeleted(): List<LocalProvider>
+
+    @Query("SELECT * FROM providers WHERE serverId = :id OR localId = :id LIMIT 1")
+    suspend fun find(id: String): LocalProvider?
+
+    @Query("SELECT * FROM providers WHERE serverId = :serverId LIMIT 1")
+    suspend fun findByServerId(serverId: String): LocalProvider?
+
+    @Query("SELECT * FROM providers")
+    suspend fun getAll(): List<LocalProvider>
+
+    @Query("SELECT * FROM providers WHERE isDirty = 1")
+    suspend fun getDirty(): List<LocalProvider>
+
+    @Upsert
+    suspend fun upsert(provider: LocalProvider)
+
+    @Delete
+    suspend fun delete(provider: LocalProvider)
+
+    @Query("DELETE FROM providers")
+    suspend fun clear()
+}
+
+@Dao
+interface LocationDao {
+    @Query("SELECT * FROM locations WHERE pendingDelete = 0 ORDER BY createdAt")
+    suspend fun getAllUndeleted(): List<LocalChargingLocation>
+
+    @Query("SELECT * FROM locations WHERE serverId = :id OR localId = :id LIMIT 1")
+    suspend fun find(id: String): LocalChargingLocation?
+
+    @Query("SELECT * FROM locations WHERE serverId = :serverId LIMIT 1")
+    suspend fun findByServerId(serverId: String): LocalChargingLocation?
+
+    @Query("SELECT * FROM locations")
+    suspend fun getAll(): List<LocalChargingLocation>
+
+    @Query("SELECT * FROM locations WHERE isDirty = 1")
+    suspend fun getDirty(): List<LocalChargingLocation>
+
+    @Upsert
+    suspend fun upsert(location: LocalChargingLocation)
+
+    @Delete
+    suspend fun delete(location: LocalChargingLocation)
+
+    @Query("DELETE FROM locations")
+    suspend fun clear()
+}
+
+@Dao
+interface SessionDao {
+    @Query("SELECT * FROM sessions WHERE pendingDelete = 0")
+    suspend fun getAllUndeleted(): List<LocalChargingSession>
+
+    @Query("SELECT * FROM sessions WHERE serverId = :id OR localId = :id LIMIT 1")
+    suspend fun find(id: String): LocalChargingSession?
+
+    @Query("SELECT * FROM sessions WHERE serverId = :serverId LIMIT 1")
+    suspend fun findByServerId(serverId: String): LocalChargingSession?
+
+    @Query("SELECT * FROM sessions WHERE vehicleId = :vehicleId")
+    suspend fun getByVehicleId(vehicleId: String): List<LocalChargingSession>
+
+    @Query("SELECT * FROM sessions")
+    suspend fun getAll(): List<LocalChargingSession>
+
+    @Query("SELECT * FROM sessions WHERE isDirty = 1")
+    suspend fun getDirty(): List<LocalChargingSession>
+
+    @Upsert
+    suspend fun upsert(session: LocalChargingSession)
+
+    @Delete
+    suspend fun delete(session: LocalChargingSession)
+
+    @Query("DELETE FROM sessions")
+    suspend fun clear()
+}

@@ -1,0 +1,416 @@
+package com.dominiqueherbrigpersonalteam.lademonitor.data.repo
+
+import android.content.Context
+import android.content.SharedPreferences
+import com.dominiqueherbrigpersonalteam.lademonitor.data.local.LocalChargingLocation
+import com.dominiqueherbrigpersonalteam.lademonitor.data.local.LocalChargingSession
+import com.dominiqueherbrigpersonalteam.lademonitor.data.local.LocalProvider
+import com.dominiqueherbrigpersonalteam.lademonitor.data.local.LocalStore
+import com.dominiqueherbrigpersonalteam.lademonitor.data.local.LocalVehicle
+import com.dominiqueherbrigpersonalteam.lademonitor.data.model.ChargingSession
+import com.dominiqueherbrigpersonalteam.lademonitor.data.model.ChargingSessionPayload
+import com.dominiqueherbrigpersonalteam.lademonitor.data.model.LocationPayload
+import com.dominiqueherbrigpersonalteam.lademonitor.data.model.ProviderPayload
+import com.dominiqueherbrigpersonalteam.lademonitor.data.model.VehiclePayload
+import com.dominiqueherbrigpersonalteam.lademonitor.data.net.NetworkMonitor
+import com.dominiqueherbrigpersonalteam.lademonitor.data.remote.ApiClient
+import com.dominiqueherbrigpersonalteam.lademonitor.data.session.SessionManager
+import com.dominiqueherbrigpersonalteam.lademonitor.data.settings.AppMode
+import com.dominiqueherbrigpersonalteam.lademonitor.data.settings.AppSettings
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.async
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+
+/**
+ * Bidirectional sync between the Room buffer and the server — the port of the iOS `SyncService`.
+ * Only active in server mode.
+ *
+ * Each pass PUSHes local changes/deletes first (in FK order Vehicles -> Providers -> Locations ->
+ * Sessions), then PULLs the server state and merges. Conflict strategy: local-dirty wins. Because
+ * every freshly created local row starts isDirty=true / serverId=null, the "upload everything on
+ * switch to server" case is just the first normal sync pass — not a special case.
+ */
+object SyncService {
+
+    private const val PREFS = "lademonitor_sync"
+    private const val KEY_LAST_USER = "lastSyncedUserId"
+    private const val MIN_AUTO_SYNC_INTERVAL_MS = 10_000L
+
+    private lateinit var prefs: SharedPreferences
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+
+    private val _isSyncing = MutableStateFlow(false)
+    val isSyncing: StateFlow<Boolean> = _isSyncing
+
+    private val _lastSyncDate = MutableStateFlow<Long?>(null)
+    val lastSyncDate: StateFlow<Long?> = _lastSyncDate
+
+    private val _lastSyncError = MutableStateFlow<String?>(null)
+    val lastSyncError: StateFlow<String?> = _lastSyncError
+
+    private val itemErrors = mutableListOf<String>()
+
+    private val gate = Mutex()
+    private var inFlight: Deferred<Unit>? = null
+
+    private val vehicles get() = LocalStore.vehicles
+    private val providers get() = LocalStore.providers
+    private val locations get() = LocalStore.locations
+    private val sessions get() = LocalStore.sessions
+
+    private class UnresolvedReferenceException(what: String) :
+        Exception("Konnte $what nicht zuordnen.")
+
+    fun init(context: Context) {
+        prefs = context.applicationContext.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        // When connectivity returns after an offline phase, push buffered changes automatically.
+        scope.launch {
+            var previous = NetworkMonitor.isOnline.value
+            NetworkMonitor.isOnline.collect { online ->
+                if (online && !previous) syncNow()
+                previous = online
+            }
+        }
+    }
+
+    /** For screens: syncs only if the last sync is older than the auto interval. */
+    suspend fun syncIfNeeded() {
+        if (AppSettings.appMode.value != AppMode.SERVER || !SessionManager.isAuthenticated.value) return
+        val last = _lastSyncDate.value
+        if (last != null && System.currentTimeMillis() - last < MIN_AUTO_SYNC_INTERVAL_MS) return
+        syncNow()
+    }
+
+    /** Forces a sync; concurrent callers coalesce onto the same in-flight run. */
+    suspend fun syncNow() {
+        val run = gate.withLock {
+            inFlight ?: scope.async { performSync() }.also { inFlight = it }
+        }
+        try {
+            run.await()
+        } finally {
+            gate.withLock { if (inFlight === run) inFlight = null }
+        }
+    }
+
+    private suspend fun performSync() {
+        if (AppSettings.appMode.value != AppMode.SERVER || !SessionManager.isAuthenticated.value) return
+        if (!NetworkMonitor.isOnline.value) {
+            _lastSyncError.value =
+                "Offline – Änderungen werden gepuffert und beim nächsten Mal hochgeladen."
+            return
+        }
+        _isSyncing.value = true
+        itemErrors.clear()
+        try {
+            resetSyncStateIfAccountChanged()
+            pushVehicles()
+            pushProviders()
+            pushLocations()
+            pushSessions()
+            pullVehicles()
+            pullProviders()
+            pullLocations()
+            pullSessions()
+            _lastSyncDate.value = System.currentTimeMillis()
+            _lastSyncError.value = if (itemErrors.isEmpty()) null else itemErrors.joinToString(" · ")
+        } catch (e: Exception) {
+            val summary = if (itemErrors.isEmpty()) "" else itemErrors.joinToString(" · ") + " · "
+            _lastSyncError.value = summary + (e.localizedMessage ?: e.toString())
+        } finally {
+            _isSyncing.value = false
+        }
+    }
+
+    // MARK: - Account change
+
+    private suspend fun resetSyncStateIfAccountChanged() {
+        val currentUserId = SessionManager.currentUser.value?.id ?: return
+        val last = prefs.getString(KEY_LAST_USER, null)
+        if (last != null && last != currentUserId) {
+            for (v in vehicles.getAll()) resetRow(v.pendingDelete, { vehicles.delete(v) }, {
+                v.serverId = null; v.isDirty = true; vehicles.upsert(v)
+            })
+            for (p in providers.getAll()) resetRow(p.pendingDelete, { providers.delete(p) }, {
+                p.serverId = null; p.isDirty = true; providers.upsert(p)
+            })
+            for (l in locations.getAll()) resetRow(l.pendingDelete, { locations.delete(l) }, {
+                l.serverId = null; l.isDirty = true; locations.upsert(l)
+            })
+            for (s in sessions.getAll()) resetRow(s.pendingDelete, { sessions.delete(s) }, {
+                s.serverId = null; s.isDirty = true; sessions.upsert(s)
+            })
+        }
+        prefs.edit().putString(KEY_LAST_USER, currentUserId).apply()
+    }
+
+    private suspend fun resetRow(pendingDelete: Boolean, delete: suspend () -> Unit, reset: suspend () -> Unit) {
+        if (pendingDelete) delete() else reset()
+    }
+
+    // MARK: - Push
+
+    private suspend fun pushVehicles() {
+        for (vehicle in vehicles.getDirty()) {
+            try {
+                if (vehicle.pendingDelete) {
+                    vehicle.serverId?.let { runCatching { ApiClient.deleteVehicle(it) } }
+                    val ref = vehicle.serverId ?: vehicle.localId
+                    sessions.getByVehicleId(ref).forEach { sessions.delete(it) }
+                    vehicles.delete(vehicle)
+                    continue
+                }
+                val payload = VehiclePayload(
+                    externalId = if (vehicle.serverId == null) vehicle.externalId else null,
+                    name = vehicle.name, brand = vehicle.brand, model = vehicle.model,
+                    batteryCapacityKwh = vehicle.batteryCapacityKwh, isActive = vehicle.isActive
+                )
+                if (vehicle.serverId != null) {
+                    ApiClient.updateVehicle(vehicle.serverId!!, payload)
+                } else {
+                    vehicle.serverId = ApiClient.createVehicle(payload).id
+                }
+                vehicle.isDirty = false
+                vehicles.upsert(vehicle)
+            } catch (e: Exception) {
+                itemErrors.add("Fahrzeug „${vehicle.name}“: ${e.localizedMessage}")
+            }
+        }
+    }
+
+    private suspend fun pushProviders() {
+        for (provider in providers.getDirty()) {
+            try {
+                if (provider.pendingDelete) {
+                    provider.serverId?.let { runCatching { ApiClient.deleteProvider(it) } }
+                    providers.delete(provider)
+                    continue
+                }
+                val payload = ProviderPayload(
+                    name = provider.name, lastPriceAcPerKwh = provider.lastPriceAcPerKwh,
+                    lastPriceDcPerKwh = provider.lastPriceDcPerKwh, notes = provider.notes
+                )
+                if (provider.serverId != null) {
+                    ApiClient.updateProvider(provider.serverId!!, payload)
+                } else {
+                    provider.serverId = ApiClient.createProvider(payload).id
+                }
+                provider.isDirty = false
+                providers.upsert(provider)
+            } catch (e: Exception) {
+                itemErrors.add("Anbieter „${provider.name}“: ${e.localizedMessage}")
+            }
+        }
+    }
+
+    private suspend fun pushLocations() {
+        for (location in locations.getDirty()) {
+            try {
+                if (location.pendingDelete) {
+                    location.serverId?.let { runCatching { ApiClient.deleteLocation(it) } }
+                    locations.delete(location)
+                    continue
+                }
+                val resolvedProviderId = resolvedProviderServerId(location.defaultProviderId)
+                val payload = LocationPayload(
+                    name = location.name, latitude = location.latitude, longitude = location.longitude,
+                    radiusM = location.radiusM, defaultProviderId = resolvedProviderId
+                )
+                if (location.serverId != null) {
+                    ApiClient.updateLocation(location.serverId!!, payload)
+                } else {
+                    location.serverId = ApiClient.createLocation(payload).id
+                }
+                location.defaultProviderId = resolvedProviderId
+                location.isDirty = false
+                locations.upsert(location)
+            } catch (e: Exception) {
+                itemErrors.add("Ladeort „${location.name}“: ${e.localizedMessage}")
+            }
+        }
+    }
+
+    private suspend fun pushSessions() {
+        for (session in sessions.getDirty()) {
+            try {
+                if (session.pendingDelete) {
+                    session.serverId?.let { runCatching { ApiClient.deleteSession(it) } }
+                    sessions.delete(session)
+                    continue
+                }
+                val resolvedVehicleId = resolvedVehicleServerId(session.vehicleId)
+                val resolvedProviderId = resolvedProviderServerId(session.providerId)
+                val payload = ChargingSessionPayload(
+                    vehicleId = if (session.serverId == null) resolvedVehicleId else null,
+                    providerId = resolvedProviderId,
+                    startTime = session.startTime,
+                    chargingType = session.chargingType,
+                    socStart = session.socStart,
+                    socEnd = session.socEnd,
+                    energyKwh = session.energyKwh,
+                    pricePerKwh = session.pricePerKwh,
+                    priceTotal = session.priceTotal,
+                    odometerKm = session.odometerKm,
+                    latitude = session.latitude,
+                    longitude = session.longitude,
+                    geocodedPlace = session.geocodedPlace,
+                    notes = session.notes,
+                    needsReview = session.needsReview
+                )
+                if (session.serverId != null) {
+                    ApiClient.updateSession(session.serverId!!, payload)
+                } else {
+                    session.serverId = ApiClient.createSession(payload).id
+                }
+                session.vehicleId = resolvedVehicleId
+                session.providerId = resolvedProviderId
+                session.isDirty = false
+                sessions.upsert(session)
+            } catch (e: Exception) {
+                itemErrors.add("Ladevorgang: ${e.localizedMessage}")
+            }
+        }
+    }
+
+    private suspend fun resolvedVehicleServerId(ref: String): String {
+        val vehicle = vehicles.find(ref)
+        return vehicle?.serverId ?: throw UnresolvedReferenceException("Fahrzeug")
+    }
+
+    private suspend fun resolvedProviderServerId(ref: String?): String? {
+        if (ref == null) return null
+        return providers.find(ref)?.serverId
+    }
+
+    // MARK: - Pull
+
+    private suspend fun pullVehicles() {
+        for (sv in ApiClient.fetchVehicles()) {
+            val existing = vehicles.findByServerId(sv.id)
+            if (existing != null) {
+                if (!existing.isDirty) {
+                    existing.externalId = sv.externalId
+                    existing.name = sv.name
+                    existing.brand = sv.brand
+                    existing.model = sv.model
+                    existing.batteryCapacityKwh = sv.batteryCapacityKwh
+                    existing.isActive = sv.isActive
+                    vehicles.upsert(existing)
+                }
+            } else {
+                vehicles.upsert(
+                    LocalVehicle(
+                        serverId = sv.id, externalId = sv.externalId, name = sv.name, brand = sv.brand,
+                        model = sv.model, batteryCapacityKwh = sv.batteryCapacityKwh, isActive = sv.isActive,
+                        isDirty = false
+                    )
+                )
+            }
+        }
+    }
+
+    private suspend fun pullProviders() {
+        for (sp in ApiClient.fetchProviders()) {
+            val existing = providers.findByServerId(sp.id)
+            if (existing != null) {
+                if (!existing.isDirty) {
+                    existing.name = sp.name
+                    existing.lastPriceAcPerKwh = sp.lastPriceAcPerKwh
+                    existing.lastPriceDcPerKwh = sp.lastPriceDcPerKwh
+                    existing.notes = sp.notes
+                    providers.upsert(existing)
+                }
+            } else {
+                providers.upsert(
+                    LocalProvider(
+                        serverId = sp.id, name = sp.name, lastPriceAcPerKwh = sp.lastPriceAcPerKwh,
+                        lastPriceDcPerKwh = sp.lastPriceDcPerKwh, notes = sp.notes, isDirty = false
+                    )
+                )
+            }
+        }
+    }
+
+    private suspend fun pullLocations() {
+        for (sl in ApiClient.fetchLocations()) {
+            val existing = locations.findByServerId(sl.id)
+            if (existing != null) {
+                if (!existing.isDirty) {
+                    existing.name = sl.name
+                    existing.latitude = sl.latitude
+                    existing.longitude = sl.longitude
+                    existing.radiusM = sl.radiusM
+                    existing.defaultProviderId = sl.defaultProviderId
+                    locations.upsert(existing)
+                }
+            } else {
+                locations.upsert(
+                    LocalChargingLocation(
+                        serverId = sl.id, name = sl.name, latitude = sl.latitude, longitude = sl.longitude,
+                        radiusM = sl.radiusM, defaultProviderId = sl.defaultProviderId, isDirty = false
+                    )
+                )
+            }
+        }
+    }
+
+    private suspend fun pullSessions() {
+        for (ss in ApiClient.fetchSessions()) {
+            val existing = sessions.findByServerId(ss.id)
+            if (existing != null) {
+                if (!existing.isDirty) {
+                    apply(ss, existing)
+                    sessions.upsert(existing)
+                }
+            } else {
+                sessions.upsert(
+                    LocalChargingSession(
+                        serverId = ss.id, vehicleId = ss.vehicleId, providerId = ss.providerId,
+                        locationId = ss.locationId, startTime = ss.startTime, endTime = ss.endTime,
+                        chargingType = ss.chargingType, socStart = ss.socStart, socEnd = ss.socEnd,
+                        energyKwh = ss.energyKwh, energyIsEstimated = ss.energyIsEstimated,
+                        odometerKm = ss.odometerKm, priceTotal = ss.priceTotal, pricePerKwh = ss.pricePerKwh,
+                        latitude = ss.latitude, longitude = ss.longitude, geocodedPlace = ss.geocodedPlace,
+                        notes = ss.notes, source = ss.source, needsReview = ss.needsReview,
+                        externalSessionId = ss.externalSessionId, isDirty = false
+                    )
+                )
+            }
+        }
+    }
+
+    private fun apply(dto: ChargingSession, session: LocalChargingSession) {
+        session.vehicleId = dto.vehicleId
+        session.providerId = dto.providerId
+        session.locationId = dto.locationId
+        session.startTime = dto.startTime
+        session.endTime = dto.endTime
+        session.chargingType = dto.chargingType
+        session.socStart = dto.socStart
+        session.socEnd = dto.socEnd
+        session.energyKwh = dto.energyKwh
+        session.energyIsEstimated = dto.energyIsEstimated
+        session.odometerKm = dto.odometerKm
+        session.priceTotal = dto.priceTotal
+        session.pricePerKwh = dto.pricePerKwh
+        session.latitude = dto.latitude
+        session.longitude = dto.longitude
+        session.geocodedPlace = dto.geocodedPlace
+        session.notes = dto.notes
+        session.source = dto.source
+        session.needsReview = dto.needsReview
+        session.externalSessionId = dto.externalSessionId
+    }
+
+    // NOTE: like the iOS version, rows that vanish from a pull are intentionally NOT auto-deleted
+    // locally — a gap in a pull response (server error, empty response, failed id resolution) would
+    // otherwise silently and irreversibly drop local sessions. Server-side deletions therefore linger
+    // as local "ghost rows" until deleted in the app too. Deliberate trade-off.
+}
