@@ -8,6 +8,8 @@ import android.location.LocationListener
 import android.location.LocationManager
 import android.os.Looper
 import androidx.core.content.ContextCompat
+import com.dominiqueherbrigpersonalteam.lademonitor.LademonitorApp
+import com.dominiqueherbrigpersonalteam.lademonitor.R
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.coroutines.resume
@@ -21,10 +23,10 @@ object CurrentLocationProvider {
 
     sealed class LocationException(message: String) : Exception(message) {
         object Denied : LocationException(
-            "Standortzugriff nicht erlaubt. Bitte in den Android-Einstellungen für Lademonitor die Ortungsberechtigung aktivieren."
+            LademonitorApp.appContext.getString(R.string.location_error_permission_denied)
         )
         object Unavailable : LocationException(
-            "Standort konnte nicht ermittelt werden. Bitte GPS/Ortung aktivieren und erneut versuchen."
+            LademonitorApp.appContext.getString(R.string.location_error_unavailable)
         )
     }
 

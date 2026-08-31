@@ -2,6 +2,8 @@ package com.dominiqueherbrigpersonalteam.lademonitor.data.repo
 
 import android.content.Context
 import android.content.SharedPreferences
+import com.dominiqueherbrigpersonalteam.lademonitor.LademonitorApp
+import com.dominiqueherbrigpersonalteam.lademonitor.R
 import com.dominiqueherbrigpersonalteam.lademonitor.data.local.LocalChargingLocation
 import com.dominiqueherbrigpersonalteam.lademonitor.data.local.LocalChargingSession
 import com.dominiqueherbrigpersonalteam.lademonitor.data.local.LocalProvider
@@ -66,7 +68,7 @@ object SyncService {
     private val sessions get() = LocalStore.sessions
 
     private class UnresolvedReferenceException(what: String) :
-        Exception("Konnte $what nicht zuordnen.")
+        Exception(LademonitorApp.appContext.getString(R.string.sync_error_unresolved_reference, what))
 
     fun init(context: Context) {
         prefs = context.applicationContext.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
@@ -103,8 +105,7 @@ object SyncService {
     private suspend fun performSync() {
         if (AppSettings.appMode.value != AppMode.SERVER || !SessionManager.isAuthenticated.value) return
         if (!NetworkMonitor.isOnline.value) {
-            _lastSyncError.value =
-                "Offline – Änderungen werden gepuffert und beim nächsten Mal hochgeladen."
+            _lastSyncError.value = LademonitorApp.appContext.getString(R.string.sync_error_offline)
             return
         }
         _isSyncing.value = true
@@ -180,7 +181,11 @@ object SyncService {
                 vehicle.isDirty = false
                 vehicles.upsert(vehicle)
             } catch (e: Exception) {
-                itemErrors.add("Fahrzeug „${vehicle.name}“: ${e.localizedMessage}")
+                itemErrors.add(
+                    LademonitorApp.appContext.getString(
+                        R.string.sync_error_item_vehicle, vehicle.name, e.localizedMessage.orEmpty()
+                    )
+                )
             }
         }
     }
@@ -205,7 +210,11 @@ object SyncService {
                 provider.isDirty = false
                 providers.upsert(provider)
             } catch (e: Exception) {
-                itemErrors.add("Anbieter „${provider.name}“: ${e.localizedMessage}")
+                itemErrors.add(
+                    LademonitorApp.appContext.getString(
+                        R.string.sync_error_item_provider, provider.name, e.localizedMessage.orEmpty()
+                    )
+                )
             }
         }
     }
@@ -232,7 +241,11 @@ object SyncService {
                 location.isDirty = false
                 locations.upsert(location)
             } catch (e: Exception) {
-                itemErrors.add("Ladeort „${location.name}“: ${e.localizedMessage}")
+                itemErrors.add(
+                    LademonitorApp.appContext.getString(
+                        R.string.sync_error_item_location, location.name, e.localizedMessage.orEmpty()
+                    )
+                )
             }
         }
     }
@@ -274,14 +287,19 @@ object SyncService {
                 session.isDirty = false
                 sessions.upsert(session)
             } catch (e: Exception) {
-                itemErrors.add("Ladevorgang: ${e.localizedMessage}")
+                itemErrors.add(
+                    LademonitorApp.appContext.getString(
+                        R.string.sync_error_item_session, e.localizedMessage.orEmpty()
+                    )
+                )
             }
         }
     }
 
     private suspend fun resolvedVehicleServerId(ref: String): String {
         val vehicle = vehicles.find(ref)
-        return vehicle?.serverId ?: throw UnresolvedReferenceException("Fahrzeug")
+        return vehicle?.serverId
+            ?: throw UnresolvedReferenceException(LademonitorApp.appContext.getString(R.string.entity_vehicle))
     }
 
     private suspend fun resolvedProviderServerId(ref: String?): String? {

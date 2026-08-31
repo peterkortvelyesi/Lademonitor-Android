@@ -49,9 +49,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.dominiqueherbrigpersonalteam.lademonitor.R
 import com.dominiqueherbrigpersonalteam.lademonitor.data.model.ChargingLocation
 import com.dominiqueherbrigpersonalteam.lademonitor.data.model.ChargingSession
 import com.dominiqueherbrigpersonalteam.lademonitor.data.model.ChargingSessionPayload
@@ -93,10 +95,11 @@ fun SessionsListScreen() {
     var showNoVehicleAlert by remember { mutableStateOf(false) }
     var showAddVehicle by remember { mutableStateOf(false) }
     var selected by remember { mutableStateOf<ChargingSession?>(null) }
+    val serverUrlRequiredMessage = stringResource(R.string.error_server_url_required)
 
     suspend fun load() {
         if (!AppSettings.isReadyForDataAccess) {
-            errorMessage = "Bitte zuerst die Server-Adresse in den Einstellungen eintragen."
+            errorMessage = serverUrlRequiredMessage
             return
         }
         isLoading = true
@@ -131,11 +134,11 @@ fun SessionsListScreen() {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Ladevorgänge") },
+                title = { Text(stringResource(R.string.dashboard_stat_sessions)) },
                 actions = {
                     IconButton(onClick = {
                         if (vehicles.isEmpty()) showNoVehicleAlert = true else showAdd = true
-                    }) { Icon(Icons.Filled.Add, contentDescription = "Neu") }
+                    }) { Icon(Icons.Filled.Add, contentDescription = stringResource(R.string.sessions_add_content_description)) }
                     FilterIconButton(onClick = { showFilter = true })
                 }
             )
@@ -146,7 +149,7 @@ fun SessionsListScreen() {
                 errorMessage != null ->
                     ErrorState(errorMessage!!, onRetry = { scope.launch { load() } })
                 sessions.isEmpty() && !isLoading ->
-                    EmptyState("Noch keine Ladevorgänge")
+                    EmptyState(stringResource(R.string.sessions_empty_state))
                 else -> LazyColumn(Modifier.fillMaxSize()) {
                     items(sessions, key = { it.id }) { session ->
                         val dismissState = rememberSwipeToDismissBoxState(
@@ -169,7 +172,7 @@ fun SessionsListScreen() {
                                     contentAlignment = Alignment.CenterEnd
                                 ) {
                                     Icon(
-                                        Icons.Filled.Delete, contentDescription = "Löschen",
+                                        Icons.Filled.Delete, contentDescription = stringResource(R.string.action_delete),
                                         tint = MaterialTheme.colorScheme.onErrorContainer
                                     )
                                 }
@@ -196,14 +199,14 @@ fun SessionsListScreen() {
     if (showNoVehicleAlert) {
         AlertDialog(
             onDismissRequest = { showNoVehicleAlert = false },
-            title = { Text("Kein Fahrzeug vorhanden") },
-            text = { Text("Bevor du einen Ladevorgang erfassen kannst, musst du mindestens ein Fahrzeug anlegen.") },
+            title = { Text(stringResource(R.string.sessions_no_vehicle_title)) },
+            text = { Text(stringResource(R.string.sessions_no_vehicle_message)) },
             confirmButton = {
                 TextButton(onClick = { showNoVehicleAlert = false; showAddVehicle = true }) {
-                    Text("Fahrzeug anlegen")
+                    Text(stringResource(R.string.vehicle_create_action))
                 }
             },
-            dismissButton = { TextButton(onClick = { showNoVehicleAlert = false }) { Text("Abbrechen") } }
+            dismissButton = { TextButton(onClick = { showNoVehicleAlert = false }) { Text(stringResource(R.string.action_cancel)) } }
         )
     }
 
@@ -267,7 +270,12 @@ private fun SessionRow(
                 }
                 if (session.needsReview) {
                     Spacer(Modifier.width(6.dp))
-                    Icon(Icons.Filled.Warning, contentDescription = "Zu prüfen", tint = Orange, modifier = Modifier.size(16.dp))
+                    Icon(
+                        Icons.Filled.Warning,
+                        contentDescription = stringResource(R.string.sessions_needs_review_content_description),
+                        tint = Orange,
+                        modifier = Modifier.size(16.dp)
+                    )
                 }
             }
             val place = session.geocodedPlace ?: locationName
@@ -285,9 +293,10 @@ private fun SessionRow(
             }
             val details = buildString {
                 when {
-                    session.socStart != null && session.socEnd != null -> append("SoC ${session.socStart} → ${session.socEnd} %")
-                    session.socStart != null -> append("SoC ab ${session.socStart} %")
-                    session.socEnd != null -> append("SoC bis ${session.socEnd} %")
+                    session.socStart != null && session.socEnd != null ->
+                        append(stringResource(R.string.session_soc_range, session.socStart!!, session.socEnd!!))
+                    session.socStart != null -> append(stringResource(R.string.session_soc_from, session.socStart!!))
+                    session.socEnd != null -> append(stringResource(R.string.session_soc_to, session.socEnd!!))
                 }
                 session.odometerKm?.let {
                     if (isNotEmpty()) append(" · ")
@@ -313,7 +322,7 @@ private fun SessionRow(
             session.pricePerKwh?.let { Text(Fmt.n("%.3f €/kWh", it), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
             if (session.needsReview) {
                 IconButton(onClick = onConfirm, modifier = Modifier.size(28.dp)) {
-                    Icon(Icons.Filled.Check, contentDescription = "Bestätigen", tint = Green)
+                    Icon(Icons.Filled.Check, contentDescription = stringResource(R.string.action_confirm), tint = Green)
                 }
             }
         }

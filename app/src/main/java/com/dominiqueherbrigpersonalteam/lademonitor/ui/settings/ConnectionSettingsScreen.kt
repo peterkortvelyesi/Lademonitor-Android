@@ -27,10 +27,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
+import com.dominiqueherbrigpersonalteam.lademonitor.R
 import com.dominiqueherbrigpersonalteam.lademonitor.data.remote.ApiClient
 import com.dominiqueherbrigpersonalteam.lademonitor.data.settings.AppSettings
 import kotlinx.coroutines.launch
@@ -43,29 +45,30 @@ fun ConnectionSettingsScreen(navController: NavController) {
     var isTesting by remember { mutableStateOf(false) }
     var success by remember { mutableStateOf<Boolean?>(null) }
     var failMessage by remember { mutableStateOf<String?>(null) }
+    val statusNotOkMessage = stringResource(R.string.connection_status_not_ok)
 
     Scaffold(topBar = {
         TopAppBar(
-            title = { Text("Verbindung") },
+            title = { Text(stringResource(R.string.settings_section_connection)) },
             navigationIcon = {
                 IconButton(onClick = { navController.popBackStack() }) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Zurück")
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.action_back))
                 }
             }
         )
     }) { padding ->
         Column(Modifier.padding(padding).padding(16.dp).fillMaxWidth()) {
-            Text("Server-Adresse", style = MaterialTheme.typography.labelLarge)
+            Text(stringResource(R.string.auth_server_address_label), style = MaterialTheme.typography.labelLarge)
             OutlinedTextField(
                 value = serverUrl,
                 onValueChange = { AppSettings.setServerUrlString(it) },
-                placeholder = { Text("https://lademonitor.example.com") },
+                placeholder = { Text(stringResource(R.string.auth_server_address_placeholder)) },
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
                 modifier = Modifier.fillMaxWidth()
             )
             Text(
-                "Domain deines Lademonitor-Servers. „https://“ wird automatisch ergänzt.",
+                stringResource(R.string.auth_server_address_hint),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -77,7 +80,7 @@ fun ConnectionSettingsScreen(navController: NavController) {
                         try {
                             val ok = ApiClient.checkHealth()
                             success = ok
-                            if (!ok) failMessage = "Server antwortet, aber Status ist nicht \"ok\"."
+                            if (!ok) failMessage = statusNotOkMessage
                         } catch (e: Exception) {
                             success = false; failMessage = e.localizedMessage
                         }
@@ -88,12 +91,12 @@ fun ConnectionSettingsScreen(navController: NavController) {
                 modifier = Modifier.fillMaxWidth().padding(top = 16.dp)
             ) {
                 if (isTesting) CircularProgressIndicator(Modifier.height(20.dp), strokeWidth = 2.dp)
-                else Text("Verbindung testen")
+                else Text(stringResource(R.string.connection_test_action))
             }
 
             when (success) {
-                true -> Row(iconTint = MaterialTheme.colorScheme.tertiary, icon = Icons.Filled.CheckCircle, text = "Verbindung erfolgreich")
-                false -> Row(iconTint = MaterialTheme.colorScheme.error, icon = Icons.Filled.Cancel, text = failMessage ?: "Fehlgeschlagen")
+                true -> Row(iconTint = MaterialTheme.colorScheme.tertiary, icon = Icons.Filled.CheckCircle, text = stringResource(R.string.connection_success))
+                false -> Row(iconTint = MaterialTheme.colorScheme.error, icon = Icons.Filled.Cancel, text = failMessage ?: stringResource(R.string.connection_failed))
                 null -> {}
             }
         }

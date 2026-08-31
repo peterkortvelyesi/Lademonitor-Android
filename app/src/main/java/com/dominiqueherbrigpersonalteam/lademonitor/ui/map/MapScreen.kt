@@ -33,10 +33,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.dominiqueherbrigpersonalteam.lademonitor.R
 import com.dominiqueherbrigpersonalteam.lademonitor.data.model.ChargingLocation
 import com.dominiqueherbrigpersonalteam.lademonitor.data.model.ChargingSession
 import com.dominiqueherbrigpersonalteam.lademonitor.data.model.Provider
@@ -85,10 +87,11 @@ fun MapScreen() {
     var sessionToPreview by remember { mutableStateOf<ChargingSession?>(null) }
 
     val sessionPins = sessions.filter { it.latitude != null && it.longitude != null }
+    val serverUrlRequiredMessage = stringResource(R.string.error_server_url_required)
 
     suspend fun load() {
         if (!AppSettings.isReadyForDataAccess) {
-            errorMessage = "Bitte zuerst die Server-Adresse in den Einstellungen eintragen."
+            errorMessage = serverUrlRequiredMessage
             return
         }
         isLoading = true; errorMessage = null
@@ -159,13 +162,13 @@ fun MapScreen() {
     }
 
     Scaffold(topBar = {
-        TopAppBar(title = { Text("Karte") }, actions = { FilterIconButton(onClick = { showFilter = true }) })
+        TopAppBar(title = { Text(stringResource(R.string.tab_map)) }, actions = { FilterIconButton(onClick = { showFilter = true }) })
     }) { padding ->
         Box(Modifier.padding(padding).fillMaxSize()) {
             when {
                 errorMessage != null -> ErrorState(errorMessage!!, onRetry = { scope.launch { load() } })
                 locations.isEmpty() && sessionPins.isEmpty() && !isLoading ->
-                    EmptyState("Keine Standorte vorhanden")
+                    EmptyState(stringResource(R.string.map_empty_state))
                 else -> {
                     AndroidView(
                         modifier = Modifier.fillMaxSize(),
@@ -189,8 +192,8 @@ fun MapScreen() {
                             .padding(horizontal = 12.dp, vertical = 8.dp),
                         horizontalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        LegendToggle("Ladeorte", Icons.Filled.EvStation, Blue, showLocations) { showLocations = !showLocations }
-                        LegendToggle("Ladevorgänge", Icons.Filled.Bolt, Color.Gray, showSessions) { showSessions = !showSessions }
+                        LegendToggle(stringResource(R.string.map_legend_locations), Icons.Filled.EvStation, Blue, showLocations) { showLocations = !showLocations }
+                        LegendToggle(stringResource(R.string.dashboard_stat_sessions), Icons.Filled.Bolt, Color.Gray, showSessions) { showSessions = !showSessions }
                     }
                 }
             }

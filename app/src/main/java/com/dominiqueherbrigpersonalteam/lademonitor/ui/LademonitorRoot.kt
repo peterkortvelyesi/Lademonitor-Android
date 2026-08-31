@@ -16,6 +16,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -23,6 +24,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.dominiqueherbrigpersonalteam.lademonitor.R
 import com.dominiqueherbrigpersonalteam.lademonitor.data.session.SessionManager
 import com.dominiqueherbrigpersonalteam.lademonitor.data.settings.AppMode
 import com.dominiqueherbrigpersonalteam.lademonitor.data.settings.AppSettings
@@ -56,11 +58,11 @@ fun LademonitorRoot() {
     }
 }
 
-private enum class Tab(val route: String, val label: String, val icon: ImageVector) {
-    DASHBOARD("dashboard", "Dashboard", Icons.Filled.BarChart),
-    SESSIONS("sessions", "Ladevorgänge", Icons.Filled.Bolt),
-    MAP("map", "Karte", Icons.Filled.Map),
-    SETTINGS("settings", "Einstellungen", Icons.Filled.Settings)
+private enum class Tab(val route: String, val labelRes: Int, val icon: ImageVector) {
+    DASHBOARD("dashboard", R.string.tab_dashboard, Icons.Filled.BarChart),
+    SESSIONS("sessions", R.string.tab_sessions, Icons.Filled.Bolt),
+    MAP("map", R.string.tab_map, Icons.Filled.Map),
+    SETTINGS("settings", R.string.tab_settings, Icons.Filled.Settings)
 }
 
 @Composable
@@ -74,6 +76,7 @@ private fun MainScaffold() {
             NavigationBar {
                 Tab.entries.forEach { tab ->
                     val selected = currentDestination?.hierarchy?.any { it.route == tab.route } == true
+                    val label = stringResource(tab.labelRes)
                     NavigationBarItem(
                         selected = selected,
                         onClick = {
@@ -83,8 +86,8 @@ private fun MainScaffold() {
                                 restoreState = true
                             }
                         },
-                        icon = { Icon(tab.icon, contentDescription = tab.label) },
-                        label = { Text(tab.label, maxLines = 1) }
+                        icon = { Icon(tab.icon, contentDescription = label) },
+                        label = { Text(label, maxLines = 1) }
                     )
                 }
             }

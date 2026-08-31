@@ -24,10 +24,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.dominiqueherbrigpersonalteam.lademonitor.R
 import com.dominiqueherbrigpersonalteam.lademonitor.data.remote.ApiException
 import com.dominiqueherbrigpersonalteam.lademonitor.data.repo.SyncService
 import com.dominiqueherbrigpersonalteam.lademonitor.data.session.SessionManager
@@ -50,6 +52,10 @@ fun AuthScreen() {
     var isSubmitting by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
+    val passwordsMismatchMessage = stringResource(R.string.auth_error_passwords_mismatch)
+    val registerLabel = stringResource(R.string.auth_action_register)
+    val loginLabel = stringResource(R.string.auth_action_login)
+
     val trimmedUsername = username.trim()
     val canSubmit = AppSettings.isConfigured &&
         trimmedUsername.length >= 3 &&
@@ -59,7 +65,7 @@ fun AuthScreen() {
     fun submit() {
         errorMessage = null
         if (isRegistering && password != passwordConfirm) {
-            errorMessage = "Die Passwörter stimmen nicht überein."
+            errorMessage = passwordsMismatchMessage
             return
         }
         scope.launch {
@@ -80,7 +86,7 @@ fun AuthScreen() {
         }
     }
 
-    Scaffold(topBar = { TopAppBar(title = { Text("Lademonitor") }) }) { padding ->
+    Scaffold(topBar = { TopAppBar(title = { Text(stringResource(R.string.app_name)) }) }) { padding ->
         Column(
             modifier = Modifier
                 .padding(padding)
@@ -88,37 +94,37 @@ fun AuthScreen() {
                 .fillMaxWidth()
                 .verticalScroll(rememberScrollState())
         ) {
-            Text("Server-Adresse", style = MaterialTheme.typography.labelLarge)
+            Text(stringResource(R.string.auth_server_address_label), style = MaterialTheme.typography.labelLarge)
             OutlinedTextField(
                 value = serverUrl,
                 onValueChange = { AppSettings.setServerUrlString(it) },
-                placeholder = { Text("https://lademonitor.example.com") },
+                placeholder = { Text(stringResource(R.string.auth_server_address_placeholder)) },
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
                 modifier = Modifier.fillMaxWidth()
             )
             Text(
-                "Domain deines Lademonitor-Servers. „https://“ wird automatisch ergänzt.",
+                stringResource(R.string.auth_server_address_hint),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
             Spacer(Modifier.height(16.dp))
             Text(
-                if (isRegistering) "Registrieren" else "Anmelden",
+                if (isRegistering) registerLabel else loginLabel,
                 style = MaterialTheme.typography.labelLarge
             )
             OutlinedTextField(
                 value = username,
                 onValueChange = { username = it },
-                label = { Text("Nutzername") },
+                label = { Text(stringResource(R.string.auth_username_label)) },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth()
             )
             OutlinedTextField(
                 value = password,
                 onValueChange = { password = it },
-                label = { Text("Passwort") },
+                label = { Text(stringResource(R.string.auth_password_label)) },
                 singleLine = true,
                 visualTransformation = PasswordVisualTransformation(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
@@ -128,14 +134,14 @@ fun AuthScreen() {
                 OutlinedTextField(
                     value = passwordConfirm,
                     onValueChange = { passwordConfirm = it },
-                    label = { Text("Passwort wiederholen") },
+                    label = { Text(stringResource(R.string.auth_password_confirm_label)) },
                     singleLine = true,
                     visualTransformation = PasswordVisualTransformation(),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                     modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
                 )
                 Text(
-                    "Nutzername mindestens 3 Zeichen, Passwort mindestens 8 Zeichen.",
+                    stringResource(R.string.auth_validation_hint),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -153,7 +159,7 @@ fun AuthScreen() {
                 if (isSubmitting) {
                     CircularProgressIndicator(modifier = Modifier.height(20.dp), strokeWidth = 2.dp)
                 } else {
-                    Text(if (isRegistering) "Registrieren" else "Anmelden")
+                    Text(if (isRegistering) registerLabel else loginLabel)
                 }
             }
 
@@ -165,14 +171,17 @@ fun AuthScreen() {
                 },
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text(if (isRegistering) "Schon ein Konto? Anmelden" else "Neu hier? Konto erstellen")
+                Text(
+                    if (isRegistering) stringResource(R.string.auth_toggle_to_login)
+                    else stringResource(R.string.auth_toggle_to_register)
+                )
             }
 
             Spacer(Modifier.height(16.dp))
             TextButton(
                 onClick = { AppSettings.setAppMode(AppMode.LOCAL_ONLY) },
                 modifier = Modifier.fillMaxWidth()
-            ) { Text("Stattdessen nur lokal nutzen") }
+            ) { Text(stringResource(R.string.auth_use_local_only)) }
         }
     }
 }

@@ -1,5 +1,7 @@
 package com.dominiqueherbrigpersonalteam.lademonitor.data.repo
 
+import com.dominiqueherbrigpersonalteam.lademonitor.LademonitorApp
+import com.dominiqueherbrigpersonalteam.lademonitor.R
 import com.dominiqueherbrigpersonalteam.lademonitor.data.local.LocalChargingLocation
 import com.dominiqueherbrigpersonalteam.lademonitor.data.local.LocalChargingSession
 import com.dominiqueherbrigpersonalteam.lademonitor.data.local.LocalProvider
@@ -15,7 +17,13 @@ import com.dominiqueherbrigpersonalteam.lademonitor.data.model.Vehicle
 import com.dominiqueherbrigpersonalteam.lademonitor.data.model.VehiclePayload
 import com.dominiqueherbrigpersonalteam.lademonitor.data.model.ChargingSessionPayload
 
-class LocalStoreException(message: String) : Exception(message)
+class LocalStoreException(message: String) : Exception(message) {
+    companion object {
+        /** Standard "not found" error, localized to the device's current language. */
+        fun notFound(): LocalStoreException =
+            LocalStoreException(LademonitorApp.appContext.getString(R.string.local_store_error_not_found))
+    }
+}
 
 /**
  * Room CRUD for both modes — the port of the SwiftData `LocalDataStore`. Works purely with the DTOs
@@ -57,7 +65,7 @@ object LocalDataStore {
     }
 
     suspend fun updateVehicle(id: String, payload: VehiclePayload): Vehicle {
-        val vehicle = vehicles.find(id) ?: throw LocalStoreException("Eintrag wurde nicht gefunden.")
+        val vehicle = vehicles.find(id) ?: throw LocalStoreException.notFound()
         payload.name?.let { vehicle.name = it }
         payload.brand?.let { vehicle.brand = it }
         payload.model?.let { vehicle.model = it }
@@ -71,7 +79,7 @@ object LocalDataStore {
 
     /** Cascades to the vehicle's sessions, matching the server. */
     suspend fun deleteVehicle(id: String) {
-        val vehicle = vehicles.find(id) ?: throw LocalStoreException("Eintrag wurde nicht gefunden.")
+        val vehicle = vehicles.find(id) ?: throw LocalStoreException.notFound()
         val childSessions = sessions.getByVehicleId(id)
         if (vehicle.serverId != null) {
             vehicle.pendingDelete = true
@@ -102,7 +110,7 @@ object LocalDataStore {
     }
 
     suspend fun updateProvider(id: String, payload: ProviderPayload): Provider {
-        val provider = providers.find(id) ?: throw LocalStoreException("Eintrag wurde nicht gefunden.")
+        val provider = providers.find(id) ?: throw LocalStoreException.notFound()
         payload.name?.let { provider.name = it }
         payload.lastPriceAcPerKwh?.let { provider.lastPriceAcPerKwh = it }
         payload.lastPriceDcPerKwh?.let { provider.lastPriceDcPerKwh = it }
@@ -114,7 +122,7 @@ object LocalDataStore {
     }
 
     suspend fun deleteProvider(id: String) {
-        val provider = providers.find(id) ?: throw LocalStoreException("Eintrag wurde nicht gefunden.")
+        val provider = providers.find(id) ?: throw LocalStoreException.notFound()
         if (provider.serverId != null) {
             provider.pendingDelete = true
             provider.isDirty = true
@@ -141,7 +149,7 @@ object LocalDataStore {
     }
 
     suspend fun updateLocation(id: String, payload: LocationPayload): ChargingLocation {
-        val location = locations.find(id) ?: throw LocalStoreException("Eintrag wurde nicht gefunden.")
+        val location = locations.find(id) ?: throw LocalStoreException.notFound()
         payload.name?.let { location.name = it }
         payload.latitude?.let { location.latitude = it }
         payload.longitude?.let { location.longitude = it }
@@ -155,7 +163,7 @@ object LocalDataStore {
     }
 
     suspend fun deleteLocation(id: String) {
-        val location = locations.find(id) ?: throw LocalStoreException("Eintrag wurde nicht gefunden.")
+        val location = locations.find(id) ?: throw LocalStoreException.notFound()
         if (location.serverId != null) {
             location.pendingDelete = true
             location.isDirty = true
@@ -187,7 +195,7 @@ object LocalDataStore {
         sessions.getAllUndeleted().map { it.asDTO() }
 
     suspend fun createSession(payload: ChargingSessionPayload): ChargingSession {
-        val vehicleId = payload.vehicleId ?: throw LocalStoreException("Eintrag wurde nicht gefunden.")
+        val vehicleId = payload.vehicleId ?: throw LocalStoreException.notFound()
         val session = LocalChargingSession(
             vehicleId = vehicleId,
             providerId = payload.providerId,
@@ -212,7 +220,7 @@ object LocalDataStore {
     }
 
     suspend fun updateSession(id: String, payload: ChargingSessionPayload): ChargingSession {
-        val session = sessions.find(id) ?: throw LocalStoreException("Eintrag wurde nicht gefunden.")
+        val session = sessions.find(id) ?: throw LocalStoreException.notFound()
         payload.providerId?.let { session.providerId = it }
         payload.startTime?.let { session.startTime = it }
         payload.chargingType?.let { session.chargingType = it }
@@ -235,7 +243,7 @@ object LocalDataStore {
     }
 
     suspend fun deleteSession(id: String) {
-        val session = sessions.find(id) ?: throw LocalStoreException("Eintrag wurde nicht gefunden.")
+        val session = sessions.find(id) ?: throw LocalStoreException.notFound()
         if (session.serverId != null) {
             session.pendingDelete = true
             session.isDirty = true

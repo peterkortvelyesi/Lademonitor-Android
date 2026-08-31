@@ -1,5 +1,7 @@
 package com.dominiqueherbrigpersonalteam.lademonitor.data.remote
 
+import com.dominiqueherbrigpersonalteam.lademonitor.LademonitorApp
+import com.dominiqueherbrigpersonalteam.lademonitor.R
 import com.dominiqueherbrigpersonalteam.lademonitor.data.model.AuthCredentials
 import com.dominiqueherbrigpersonalteam.lademonitor.data.model.AuthResponse
 import com.dominiqueherbrigpersonalteam.lademonitor.data.model.AuthUser
@@ -122,7 +124,7 @@ object ApiClient {
     }
 
     private fun messageFrom(raw: String): String {
-        if (raw.isBlank()) return "unbekannt"
+        if (raw.isBlank()) return LademonitorApp.appContext.getString(R.string.api_error_unknown)
         return try {
             val map = Json.moshi.adapter<Map<String, Any>>(
                 Types.newParameterizedType(Map::class.java, String::class.java, Any::class.java)

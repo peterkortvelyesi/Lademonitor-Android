@@ -41,10 +41,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.dominiqueherbrigpersonalteam.lademonitor.R
 import com.dominiqueherbrigpersonalteam.lademonitor.data.model.Vehicle
 import com.dominiqueherbrigpersonalteam.lademonitor.data.model.VehiclePayload
 import com.dominiqueherbrigpersonalteam.lademonitor.data.repo.AppRepository
@@ -62,9 +64,10 @@ fun VehiclesSettingsScreen(navController: NavController) {
     var showAdd by remember { mutableStateOf(false) }
     var editing by remember { mutableStateOf<Vehicle?>(null) }
     var pendingDelete by remember { mutableStateOf<Vehicle?>(null) }
+    val serverAddressRequiredMessage = stringResource(R.string.error_server_address_required)
 
     suspend fun load() {
-        if (!AppSettings.isReadyForDataAccess) { errorMessage = "Bitte zuerst die Server-Adresse eintragen."; return }
+        if (!AppSettings.isReadyForDataAccess) { errorMessage = serverAddressRequiredMessage; return }
         try { vehicles = AppRepository.fetchVehicles(); errorMessage = null }
         catch (e: Exception) { if (vehicles.isEmpty()) errorMessage = e.localizedMessage }
     }
@@ -72,9 +75,9 @@ fun VehiclesSettingsScreen(navController: NavController) {
 
     Scaffold(topBar = {
         TopAppBar(
-            title = { Text("Fahrzeuge") },
-            navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Zurück") } },
-            actions = { IconButton(onClick = { showAdd = true }) { Icon(Icons.Filled.Add, "Neu") } }
+            title = { Text(stringResource(R.string.settings_nav_vehicles)) },
+            navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.action_back)) } },
+            actions = { IconButton(onClick = { showAdd = true }) { Icon(Icons.Filled.Add, stringResource(R.string.sessions_add_content_description)) } }
         )
     }) { padding ->
         LazyColumn(Modifier.padding(padding).fillMaxSize()) {
@@ -90,7 +93,7 @@ fun VehiclesSettingsScreen(navController: NavController) {
                             if (!vehicle.isActive) {
                                 Spacer(Modifier.width(6.dp))
                                 Box(Modifier.clip(RoundedCornerShape(50)).background(MaterialTheme.colorScheme.surfaceVariant).padding(horizontal = 6.dp, vertical = 2.dp)) {
-                                    Text("inaktiv", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    Text(stringResource(R.string.vehicle_inactive_badge), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                 }
                             }
                         }
@@ -100,7 +103,7 @@ fun VehiclesSettingsScreen(navController: NavController) {
                     vehicle.batteryCapacityKwh?.let {
                         Text(Fmt.n("%.0f kWh", it), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
-                    IconButton(onClick = { pendingDelete = vehicle }) { Icon(Icons.Filled.Delete, "Löschen", tint = MaterialTheme.colorScheme.error) }
+                    IconButton(onClick = { pendingDelete = vehicle }) { Icon(Icons.Filled.Delete, stringResource(R.string.action_delete), tint = MaterialTheme.colorScheme.error) }
                 }
                 HorizontalDivider()
             }
@@ -113,15 +116,15 @@ fun VehiclesSettingsScreen(navController: NavController) {
     pendingDelete?.let { v ->
         AlertDialog(
             onDismissRequest = { pendingDelete = null },
-            title = { Text("Fahrzeug löschen?") },
-            text = { Text("Achtung: Dabei werden auch ALLE zugehörigen Ladevorgänge dieses Fahrzeugs unwiderruflich gelöscht.") },
+            title = { Text(stringResource(R.string.vehicle_delete_confirm_title)) },
+            text = { Text(stringResource(R.string.vehicle_delete_confirm_message)) },
             confirmButton = {
                 TextButton(onClick = {
                     val target = v; pendingDelete = null
                     scope.launch { runCatching { AppRepository.deleteVehicle(target.id) }; load() }
-                }) { Text("Löschen", color = MaterialTheme.colorScheme.error) }
+                }) { Text(stringResource(R.string.action_delete), color = MaterialTheme.colorScheme.error) }
             },
-            dismissButton = { TextButton(onClick = { pendingDelete = null }) { Text("Abbrechen") } }
+            dismissButton = { TextButton(onClick = { pendingDelete = null }) { Text(stringResource(R.string.action_cancel)) } }
         )
     }
 }
@@ -165,26 +168,26 @@ fun AddEditVehicleModal(vehicle: Vehicle?, onDismiss: () -> Unit, onSaved: () ->
     FullScreenModal(onDismiss = onDismiss) {
         Scaffold(topBar = {
             TopAppBar(
-                title = { Text(if (isEditing) "Fahrzeug bearbeiten" else "Neues Fahrzeug") },
-                navigationIcon = { TextButton(onClick = onDismiss) { Text("Abbrechen") } },
-                actions = { TextButton(onClick = { save() }, enabled = !isSaving && canSave) { Text(if (isSaving) "Speichert…" else "Speichern") } }
+                title = { Text(if (isEditing) stringResource(R.string.vehicle_edit_title) else stringResource(R.string.vehicle_add_title)) },
+                navigationIcon = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } },
+                actions = { TextButton(onClick = { save() }, enabled = !isSaving && canSave) { Text(if (isSaving) stringResource(R.string.action_saving) else stringResource(R.string.action_save)) } }
             )
         }) { padding ->
             Column(Modifier.padding(padding).padding(16.dp).fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedTextField(
-                    value = externalId, onValueChange = { externalId = it }, label = { Text("Externe ID (z.B. enyaq)") },
+                    value = externalId, onValueChange = { externalId = it }, label = { Text(stringResource(R.string.vehicle_field_external_id)) },
                     singleLine = true, enabled = !isEditing, modifier = Modifier.fillMaxWidth()
                 )
-                if (isEditing) Text("Die externe ID ist nach dem Anlegen nicht mehr änderbar.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("Name") }, singleLine = true, modifier = Modifier.fillMaxWidth())
-                OutlinedTextField(value = brand, onValueChange = { brand = it }, label = { Text("Marke (optional)") }, singleLine = true, modifier = Modifier.fillMaxWidth())
-                OutlinedTextField(value = model, onValueChange = { model = it }, label = { Text("Modell (optional)") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                if (isEditing) Text(stringResource(R.string.vehicle_external_id_hint), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text(stringResource(R.string.field_name)) }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(value = brand, onValueChange = { brand = it }, label = { Text(stringResource(R.string.vehicle_field_brand)) }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(value = model, onValueChange = { model = it }, label = { Text(stringResource(R.string.vehicle_field_model)) }, singleLine = true, modifier = Modifier.fillMaxWidth())
                 OutlinedTextField(
-                    value = battery, onValueChange = { battery = it }, label = { Text("Akkukapazität (kWh, optional)") },
+                    value = battery, onValueChange = { battery = it }, label = { Text(stringResource(R.string.vehicle_field_battery_capacity)) },
                     singleLine = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), modifier = Modifier.fillMaxWidth()
                 )
                 Row(Modifier.fillMaxWidth().padding(top = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Text("Aktiv", Modifier.weight(1f))
+                    Text(stringResource(R.string.field_active), Modifier.weight(1f))
                     Switch(checked = isActive, onCheckedChange = { isActive = it })
                 }
                 errorMessage?.let { Text(it, color = MaterialTheme.colorScheme.error) }

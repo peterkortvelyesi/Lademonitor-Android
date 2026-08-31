@@ -1,3 +1,298 @@
 <resources>
     <string name="app_name">Lademonitor</string>
+
+    <!-- Models.kt: SessionSource -->
+    <string name="session_source_manual">Manuell</string>
+    <string name="session_source_automatic">Automatisch</string>
+    <string name="session_source_import">Import</string>
+
+    <!-- Models.kt: ConsumptionMethod -->
+    <string name="consumption_method_full_charge_interval_label">Exakt (Vollladung)</string>
+    <string name="consumption_method_full_charge_interval_explanation">Exakter Wert aus einem Vollladungs-Intervall – der genaueste Fall (Goldstandard).</string>
+    <string name="consumption_method_soc_corrected_label">SoC-korrigiert</string>
+    <string name="consumption_method_soc_corrected_explanation">SoC-korrigiert auf Basis einer gemessenen kWh-Angabe.</string>
+    <string name="consumption_method_naive_label">Einfach (ohne SoC)</string>
+    <string name="consumption_method_naive_explanation">Einfache kWh/km-Rechnung ohne SoC-Korrektur (keine SoC-Werte verfügbar).</string>
+    <string name="consumption_method_estimated_energy_label">Geschätzte Energie</string>
+    <string name="consumption_method_estimated_energy_explanation">Basiert auf einer geschätzten Energiemenge statt eines gemessenen kWh-Werts – Fehler können sich hier häufen.</string>
+    <string name="consumption_method_unavailable_label">Nicht verfügbar</string>
+    <string name="consumption_method_unavailable_explanation">Keine Verbrauchsberechnung möglich (z. B. erster Ladevorgang oder fehlender Kilometerstand).</string>
+
+    <!-- Shared entity names -->
+    <string name="entity_vehicle">Fahrzeug</string>
+
+    <!-- LocalStatsCalculator.kt -->
+    <string name="stats_no_provider">Ohne Anbieter</string>
+
+    <!-- CurrentLocationProvider.kt -->
+    <string name="location_error_permission_denied">Standortzugriff nicht erlaubt. Bitte in den Android-Einstellungen für Lademonitor die Ortungsberechtigung aktivieren.</string>
+    <string name="location_error_unavailable">Standort konnte nicht ermittelt werden. Bitte GPS/Ortung aktivieren und erneut versuchen.</string>
+
+    <!-- ApiException.kt / ApiClient.kt -->
+    <string name="api_error_not_configured">Keine Server-URL konfiguriert. Bitte in den Einstellungen eintragen.</string>
+    <string name="api_error_invalid_response">Ungültige Antwort vom Server.</string>
+    <string name="api_error_server">Serverfehler (%1$d): %2$s</string>
+    <string name="api_error_decoding">Antwort konnte nicht gelesen werden: %1$s</string>
+    <string name="api_error_network">Verbindung fehlgeschlagen: %1$s</string>
+    <string name="api_error_unknown">unbekannt</string>
+
+    <!-- LocalGeocoder.kt -->
+    <string name="geocoder_unknown_place">Unbekannter Ort</string>
+
+    <!-- LocalDataStore.kt -->
+    <string name="local_store_error_not_found">Eintrag wurde nicht gefunden.</string>
+
+    <!-- SyncService.kt -->
+    <string name="sync_error_offline">Offline – Änderungen werden gepuffert und beim nächsten Mal hochgeladen.</string>
+    <string name="sync_error_unresolved_reference">Konnte %1$s nicht zuordnen.</string>
+    <string name="sync_error_item_vehicle">Fahrzeug „%1$s“: %2$s</string>
+    <string name="sync_error_item_provider">Anbieter „%1$s“: %2$s</string>
+    <string name="sync_error_item_location">Ladeort „%1$s“: %2$s</string>
+    <string name="sync_error_item_session">Ladevorgang: %1$s</string>
+
+    <!-- ui/common/Components.kt -->
+    <string name="error_state_title">Keine Verbindung</string>
+    <string name="error_state_retry">Erneut versuchen</string>
+
+    <!-- ui/common/Format.kt -->
+    <string name="relative_time_just_now">gerade eben</string>
+    <string name="relative_time_minutes">vor %1$d Min.</string>
+    <string name="relative_time_hours">vor %1$d Std.</string>
+    <string name="relative_time_days">vor %1$d Tg.</string>
+
+    <!-- ui/LademonitorRoot.kt: bottom navigation tabs -->
+    <string name="tab_dashboard">Dashboard</string>
+    <string name="tab_sessions">Ladevorgänge</string>
+    <string name="tab_map">Karte</string>
+    <string name="tab_settings">Einstellungen</string>
+
+    <!-- ui/auth/AuthScreen.kt -->
+    <string name="auth_error_passwords_mismatch">Die Passwörter stimmen nicht überein.</string>
+    <string name="auth_action_register">Registrieren</string>
+    <string name="auth_action_login">Anmelden</string>
+    <string name="auth_server_address_label">Server-Adresse</string>
+    <string name="auth_server_address_placeholder">https://lademonitor.example.com</string>
+    <string name="auth_server_address_hint">Domain deines Lademonitor-Servers. „https://“ wird automatisch ergänzt.</string>
+    <string name="auth_username_label">Nutzername</string>
+    <string name="auth_password_label">Passwort</string>
+    <string name="auth_password_confirm_label">Passwort wiederholen</string>
+    <string name="auth_validation_hint">Nutzername mindestens 3 Zeichen, Passwort mindestens 8 Zeichen.</string>
+    <string name="auth_toggle_to_login">Schon ein Konto? Anmelden</string>
+    <string name="auth_toggle_to_register">Neu hier? Konto erstellen</string>
+    <string name="auth_use_local_only">Stattdessen nur lokal nutzen</string>
+
+    <!-- ui/auth/ModeSelectionScreen.kt -->
+    <string name="mode_selection_question">Wie möchtest du die App nutzen?</string>
+    <string name="mode_selection_local_title">Nur lokal auf diesem Gerät</string>
+    <string name="mode_selection_local_description">Alle Daten bleiben ausschließlich auf diesem Gerät. Kein Server, keine automatische Erkennung über Home Assistant, keine Synchronisation zwischen Geräten. Du kannst später jederzeit zu einem Server wechseln und alle lokalen Daten hochladen.</string>
+    <string name="mode_selection_server_title">Mit eigenem Server verbinden</string>
+    <string name="mode_selection_server_description">Daten liegen zentral auf deinem Lademonitor-Server, inkl. automatischer Ladevorgangs-Erkennung über Home Assistant und Zugriff vom Web-UI aus.</string>
+
+    <!-- Shared generic actions -->
+    <string name="action_ok">OK</string>
+    <string name="action_cancel">Abbrechen</string>
+    <string name="action_apply">Anwenden</string>
+
+    <!-- ui/filter/FilterPreset.kt -->
+    <string name="filter_preset_last_7_days">Letzte 7 Tage</string>
+    <string name="filter_preset_last_30_days">Letzte 30 Tage</string>
+    <string name="filter_preset_last_90_days">Letzte 90 Tage</string>
+    <string name="filter_preset_last_month">Letzter Monat</string>
+    <string name="filter_preset_month_to_date">Monat bis jetzt</string>
+    <string name="filter_preset_year_to_date">Jahr bis jetzt</string>
+    <string name="filter_preset_last_year">Letztes Jahr</string>
+
+    <!-- ui/filter/FilterSheet.kt -->
+    <string name="filter_content_description">Filter</string>
+    <string name="filter_sheet_title">Filter</string>
+    <string name="filter_date_range_section">Zeitraum</string>
+    <string name="filter_custom_range_section">Eigener Zeitraum</string>
+    <string name="filter_from">Von: %1$s</string>
+    <string name="filter_to">Bis: %1$s</string>
+    <string name="filter_clear">Filter löschen</string>
+
+    <!-- Shared -->
+    <string name="action_refresh">Aktualisieren</string>
+    <string name="error_server_url_required">Bitte zuerst die Server-Adresse in den Einstellungen eintragen.</string>
+
+    <!-- ui/dashboard/DashboardScreen.kt -->
+    <string name="dashboard_stat_sessions">Ladevorgänge</string>
+    <string name="dashboard_stat_total_kwh">Gesamt kWh</string>
+    <string name="dashboard_stat_total_cost">Gesamtkosten</string>
+    <string name="dashboard_stat_avg_price">Ø Preis/kWh</string>
+    <string name="dashboard_stat_avg_consumption">Ø Verbrauch/100km</string>
+    <string name="dashboard_stat_price_per_100km">Preis/100km</string>
+    <string name="dashboard_stat_km_driven">Gefahrene Kilometer</string>
+    <string name="dashboard_section_ac_dc">AC / DC-Aufteilung</string>
+    <string name="dashboard_section_kwh_by_provider">kWh pro Anbieter</string>
+    <string name="dashboard_section_paid_by_provider">Bezahlt pro Anbieter</string>
+    <string name="dashboard_section_cost_by_month">Kosten pro Monat</string>
+    <string name="dashboard_section_kwh_by_month">kWh pro Monat</string>
+    <string name="dashboard_provider_other">Andere</string>
+
+    <!-- Shared -->
+    <string name="action_delete">Löschen</string>
+    <string name="action_confirm">Bestätigen</string>
+    <string name="vehicle_create_action">Fahrzeug anlegen</string>
+
+    <!-- ui/sessions/SessionsListScreen.kt -->
+    <string name="sessions_add_content_description">Neu</string>
+    <string name="sessions_empty_state">Noch keine Ladevorgänge</string>
+    <string name="sessions_no_vehicle_title">Kein Fahrzeug vorhanden</string>
+    <string name="sessions_no_vehicle_message">Bevor du einen Ladevorgang erfassen kannst, musst du mindestens ein Fahrzeug anlegen.</string>
+    <string name="sessions_needs_review_content_description">Zu prüfen</string>
+    <string name="session_soc_range">SoC %1$d → %2$d %%</string>
+    <string name="session_soc_from">SoC ab %1$d %%</string>
+    <string name="session_soc_to">SoC bis %1$d %%</string>
+
+    <!-- ui/map/MapScreen.kt -->
+    <string name="map_empty_state">Keine Standorte vorhanden</string>
+    <string name="map_legend_locations">Ladeorte</string>
+
+    <!-- Shared -->
+    <string name="action_cannot_be_undone">Das kann nicht rückgängig gemacht werden.</string>
+
+    <!-- ui/settings/SettingsScreen.kt -->
+    <string name="settings_section_mode">Modus</string>
+    <string name="settings_label_current">Aktuell</string>
+    <string name="settings_mode_local">Nur lokal</string>
+    <string name="settings_mode_server">Server</string>
+    <string name="settings_switch_to_server_action">Zu Server wechseln</string>
+    <string name="settings_mode_local_hint">Alle Daten liegen ausschließlich auf diesem Gerät.</string>
+    <string name="settings_switch_to_local_action">Zu \"Nur lokal\" wechseln</string>
+    <string name="settings_section_account">Konto</string>
+    <string name="settings_label_logged_in_as">Angemeldet als</string>
+    <string name="settings_logging_out">Abmelden…</string>
+    <string name="settings_logout_action">Abmelden</string>
+    <string name="settings_section_connection">Verbindung</string>
+    <string name="settings_nav_connection">Server &amp; Verbindung</string>
+    <string name="settings_section_sync">Synchronisierung</string>
+    <string name="settings_label_last_synced">Zuletzt synchronisiert</string>
+    <string name="settings_not_synced_yet">Noch nicht synchronisiert</string>
+    <string name="settings_syncing">Synchronisiert…</string>
+    <string name="settings_sync_now_action">Jetzt synchronisieren</string>
+    <string name="settings_section_management">Verwaltung</string>
+    <string name="settings_nav_vehicles">Fahrzeuge</string>
+    <string name="settings_nav_providers">Anbieter</string>
+    <string name="settings_reset_action">Alle lokalen Daten zurücksetzen</string>
+    <string name="settings_reset_hint_server">Löscht Fahrzeuge, Anbieter, Ladeorte und Ladevorgänge auf diesem Gerät. Bereits synchronisierte Daten bleiben auf dem Server und werden danach automatisch zurückgeholt – noch nicht hochgeladene Änderungen gehen verloren.</string>
+    <string name="settings_reset_hint_local">Löscht Fahrzeuge, Anbieter, Ladeorte und Ladevorgänge unwiderruflich von diesem Gerät. Es gibt keine weitere Kopie.</string>
+    <string name="settings_switch_to_server_title">Zu Server wechseln?</string>
+    <string name="settings_switch_to_server_message">Nach der Anmeldung werden deine bisherigen lokalen Daten automatisch zum Server hochgeladen. Du kannst jederzeit zurück zu \"Nur lokal\" wechseln.</string>
+    <string name="settings_switch_action">Wechseln</string>
+    <string name="settings_reset_confirm_title">Alle lokalen Daten löschen?</string>
+
+    <!-- Shared -->
+    <string name="action_back">Zurück</string>
+
+    <!-- ui/settings/ConnectionSettingsScreen.kt -->
+    <string name="connection_status_not_ok">Server antwortet, aber Status ist nicht \"ok\".</string>
+    <string name="connection_test_action">Verbindung testen</string>
+    <string name="connection_success">Verbindung erfolgreich</string>
+    <string name="connection_failed">Fehlgeschlagen</string>
+
+    <!-- Shared -->
+    <string name="error_server_address_required">Bitte zuerst die Server-Adresse eintragen.</string>
+    <string name="action_save">Speichern</string>
+    <string name="action_saving">Speichert…</string>
+    <string name="field_name">Name</string>
+    <string name="field_active">Aktiv</string>
+
+    <!-- ui/settings/VehiclesSettingsScreen.kt -->
+    <string name="vehicle_inactive_badge">inaktiv</string>
+    <string name="vehicle_delete_confirm_title">Fahrzeug löschen?</string>
+    <string name="vehicle_delete_confirm_message">Achtung: Dabei werden auch ALLE zugehörigen Ladevorgänge dieses Fahrzeugs unwiderruflich gelöscht.</string>
+    <string name="vehicle_edit_title">Fahrzeug bearbeiten</string>
+    <string name="vehicle_add_title">Neues Fahrzeug</string>
+    <string name="vehicle_field_external_id">Externe ID (z.B. enyaq)</string>
+    <string name="vehicle_external_id_hint">Die externe ID ist nach dem Anlegen nicht mehr änderbar.</string>
+    <string name="vehicle_field_brand">Marke (optional)</string>
+    <string name="vehicle_field_model">Modell (optional)</string>
+    <string name="vehicle_field_battery_capacity">Akkukapazität (kWh, optional)</string>
+
+    <!-- Shared -->
+    <string name="field_notes">Notizen (optional)</string>
+
+    <!-- ui/settings/ProvidersSettingsScreen.kt -->
+    <string name="provider_delete_confirm_title">Anbieter löschen?</string>
+    <string name="provider_delete_confirm_message">„%1$s“ wird gelöscht.</string>
+    <string name="provider_edit_title">Anbieter bearbeiten</string>
+    <string name="provider_add_title">Neuer Anbieter</string>
+    <string name="provider_field_price_ac">Preis AC/kWh (€, optional)</string>
+    <string name="provider_field_price_dc">Preis DC/kWh (€, optional)</string>
+    <string name="provider_price_hint">Diese Preise dienen als Vorschlag und werden bei jedem Ladevorgang mit Preis automatisch aktualisiert.</string>
+
+    <!-- Shared -->
+    <string name="action_search">Suchen</string>
+    <string name="provider_none_selected">– keiner –</string>
+    <string name="provider_add_new_ellipsis">Neuer Anbieter…</string>
+
+    <!-- ui/settings/LocationsSettingsScreen.kt -->
+    <string name="location_radius_format">Radius %1$d m</string>
+    <string name="location_delete_confirm_title">Ladeort löschen?</string>
+    <string name="location_delete_confirm_message">„%1$s“ wird gelöscht.</string>
+    <string name="location_search_no_results">Keine Treffer. Bitte die Koordinaten unten manuell eintragen.</string>
+    <string name="location_search_failed">Suche fehlgeschlagen.</string>
+    <string name="location_edit_title">Ladeort bearbeiten</string>
+    <string name="location_add_title">Neuer Ladeort</string>
+    <string name="location_field_address_search">Adresse suchen</string>
+    <string name="location_current_location_action">"  Aktueller Standort"</string>
+    <string name="location_field_latitude">Breite (lat)</string>
+    <string name="location_field_longitude">Länge (lon)</string>
+    <string name="location_field_radius">Radius (m)</string>
+    <string name="location_radius_hint">Der Radius bestimmt, wie nah ein Ladevorgang sein muss, um automatisch diesem Ort zugeordnet zu werden.</string>
+    <string name="location_field_default_provider">Standard-Anbieter</string>
+
+    <!-- Shared -->
+    <string name="action_close">Schließen</string>
+    <string name="action_edit">Bearbeiten</string>
+    <string name="session_singular">Ladevorgang</string>
+
+    <!-- ui/sessions/SessionDetailScreen.kt -->
+    <string name="session_detail_soc_range">%1$d → %2$d %%</string>
+    <string name="session_detail_soc_from">ab %1$d %%</string>
+    <string name="session_detail_soc_to">bis %1$d %%</string>
+    <string name="session_detail_section_vehicle_time">Fahrzeug &amp; Zeit</string>
+    <string name="session_detail_label_start">Start</string>
+    <string name="session_detail_label_charging_type">Lade-Art</string>
+    <string name="session_detail_section_location_provider">Ort &amp; Anbieter</string>
+    <string name="session_detail_label_provider">Anbieter</string>
+    <string name="session_detail_label_place">Ort</string>
+    <string name="session_detail_section_battery_energy">Akkustand &amp; Energie</string>
+    <string name="session_detail_label_soc">SoC</string>
+    <string name="session_detail_estimated_suffix"> (geschätzt)</string>
+    <string name="session_detail_label_kwh">kWh</string>
+    <string name="session_detail_label_odometer">Kilometerstand</string>
+    <string name="session_detail_label_consumption">Verbrauch</string>
+    <string name="session_detail_section_price">Preis</string>
+    <string name="session_detail_label_total">Gesamt</string>
+    <string name="session_detail_label_per_kwh">Pro kWh</string>
+    <string name="session_detail_section_source">Quelle</string>
+    <string name="session_detail_label_recorded_as">Erfasst als</string>
+    <string name="session_detail_label_status">Status</string>
+    <string name="session_detail_status_reviewed">Geprüft</string>
+
+    <!-- Shared -->
+    <string name="field_optional_placeholder">optional</string>
+
+    <!-- ui/sessions/AddEditSessionScreen.kt -->
+    <string name="add_session_search_no_results">Keine Treffer. Bitte Koordinaten manuell suchen oder \"Aktueller Standort\" verwenden.</string>
+    <string name="session_add_title">Neuer Ladevorgang</string>
+    <string name="session_select_vehicle_placeholder">Fahrzeug wählen</string>
+    <string name="add_session_section_provider_type">Anbieter &amp; Typ</string>
+    <string name="add_session_soc_toggle_label">SoC-Werte angeben</string>
+    <string name="add_session_soc_end_label">Ende</string>
+    <string name="add_session_section_energy_price">Energie &amp; Preis</string>
+    <string name="add_session_kwh_placeholder">automatisch, falls leer</string>
+    <string name="add_session_field_price_per_kwh">Preis/kWh (€)</string>
+    <string name="add_session_field_total_price">Gesamtpreis (€)</string>
+    <string name="add_session_section_misc">Sonstiges</string>
+    <string name="add_session_field_location_optional">Ladeort (optional)</string>
+    <string name="add_session_field_odometer_optional">Kilometerstand (optional)</string>
+    <string name="add_session_section_position">Position</string>
+    <string name="add_session_use_location_action">Von Ladeort übernehmen</string>
+    <string name="add_session_coordinates_format">Koordinaten: %1$s, %2$s</string>
+
+    <!-- data/remote/ServerDate.kt -->
+    <string name="server_date_error_unknown_format">Unbekanntes Datumsformat: %1$s</string>
 </resources>

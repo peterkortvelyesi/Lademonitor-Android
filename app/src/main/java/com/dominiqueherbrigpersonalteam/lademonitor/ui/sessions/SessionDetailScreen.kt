@@ -30,8 +30,10 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.dominiqueherbrigpersonalteam.lademonitor.R
 import com.dominiqueherbrigpersonalteam.lademonitor.data.model.ChargingLocation
 import com.dominiqueherbrigpersonalteam.lademonitor.data.model.ChargingSession
 import com.dominiqueherbrigpersonalteam.lademonitor.data.model.ChargingSessionPayload
@@ -65,9 +67,10 @@ fun SessionDetailScreen(
     val locationName = locations.firstOrNull { it.id == session.locationId }?.name
 
     val socText = when {
-        session.socStart != null && session.socEnd != null -> "${session.socStart} → ${session.socEnd} %"
-        session.socStart != null -> "ab ${session.socStart} %"
-        session.socEnd != null -> "bis ${session.socEnd} %"
+        session.socStart != null && session.socEnd != null ->
+            stringResource(R.string.session_detail_soc_range, session.socStart!!, session.socEnd!!)
+        session.socStart != null -> stringResource(R.string.session_detail_soc_from, session.socStart!!)
+        session.socEnd != null -> stringResource(R.string.session_detail_soc_to, session.socEnd!!)
         else -> "–"
     }
 
@@ -85,16 +88,16 @@ fun SessionDetailScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Ladevorgang") },
-                navigationIcon = { IconButton(onClick = onDismiss) { Icon(Icons.Filled.Close, contentDescription = "Schließen") } },
+                title = { Text(stringResource(R.string.session_singular)) },
+                navigationIcon = { IconButton(onClick = onDismiss) { Icon(Icons.Filled.Close, contentDescription = stringResource(R.string.action_close)) } },
                 actions = {
                     if (session.needsReview) {
                         IconButton(onClick = { confirm() }, enabled = !isConfirming) {
                             if (isConfirming) CircularProgressIndicator(Modifier.height(20.dp), strokeWidth = 2.dp)
-                            else Icon(Icons.Filled.Check, contentDescription = "Bestätigen", tint = Green)
+                            else Icon(Icons.Filled.Check, contentDescription = stringResource(R.string.action_confirm), tint = Green)
                         }
                     }
-                    IconButton(onClick = { showEdit = true }) { Icon(Icons.Filled.Edit, contentDescription = "Bearbeiten") }
+                    IconButton(onClick = { showEdit = true }) { Icon(Icons.Filled.Edit, contentDescription = stringResource(R.string.action_edit)) }
                 }
             )
         }
@@ -108,46 +111,52 @@ fun SessionDetailScreen(
             if (lat != null && lon != null) {
                 StaticMap(
                     lat = lat, lon = lon,
-                    label = locationName ?: session.geocodedPlace ?: "Ladevorgang",
+                    label = locationName ?: session.geocodedPlace ?: stringResource(R.string.session_singular),
                     modifier = Modifier.fillMaxWidth().height(200.dp).clip(RoundedCornerShape(8.dp))
                 )
             }
 
             SectionCard {
-                CardTitle("Fahrzeug & Zeit")
-                LabeledRow("Fahrzeug", vehicleName ?: "–")
-                LabeledRow("Start", Fmt.dateTimeFull(session.startTime))
-                session.chargingTypeValue?.let { LabeledRow("Lade-Art", it.raw) }
+                CardTitle(stringResource(R.string.session_detail_section_vehicle_time))
+                LabeledRow(stringResource(R.string.entity_vehicle), vehicleName ?: "–")
+                LabeledRow(stringResource(R.string.session_detail_label_start), Fmt.dateTimeFull(session.startTime))
+                session.chargingTypeValue?.let { LabeledRow(stringResource(R.string.session_detail_label_charging_type), it.raw) }
             }
 
             SectionCard {
-                CardTitle("Ort & Anbieter")
-                LabeledRow("Anbieter", providerName ?: "–")
-                LabeledRow("Ort", session.geocodedPlace ?: locationName ?: "–")
+                CardTitle(stringResource(R.string.session_detail_section_location_provider))
+                LabeledRow(stringResource(R.string.session_detail_label_provider), providerName ?: "–")
+                LabeledRow(stringResource(R.string.session_detail_label_place), session.geocodedPlace ?: locationName ?: "–")
             }
 
             SectionCard {
-                CardTitle("Akkustand & Energie")
-                if (session.socStart != null || session.socEnd != null) LabeledRow("SoC", socText)
+                CardTitle(stringResource(R.string.session_detail_section_battery_energy))
+                if (session.socStart != null || session.socEnd != null) LabeledRow(stringResource(R.string.session_detail_label_soc), socText)
                 session.energyKwh?.let {
-                    LabeledRow("kWh", Fmt.n("%.2f kWh", it) + if (session.energyIsEstimated) " (geschätzt)" else "")
+                    LabeledRow(
+                        stringResource(R.string.session_detail_label_kwh),
+                        Fmt.n("%.2f kWh", it) + if (session.energyIsEstimated) stringResource(R.string.session_detail_estimated_suffix) else ""
+                    )
                 }
-                session.odometerKm?.let { LabeledRow("Kilometerstand", Fmt.km(it)) }
-                session.consumptionKwhPer100km?.let { LabeledRow("Verbrauch", Fmt.n("%.1f kWh/100km", it)) }
+                session.odometerKm?.let { LabeledRow(stringResource(R.string.session_detail_label_odometer), Fmt.km(it)) }
+                session.consumptionKwhPer100km?.let { LabeledRow(stringResource(R.string.session_detail_label_consumption), Fmt.n("%.1f kWh/100km", it)) }
             }
 
             if (session.priceTotal != null || session.pricePerKwh != null) {
                 SectionCard {
-                    CardTitle("Preis")
-                    session.priceTotal?.let { LabeledRow("Gesamt", Fmt.n("%.2f €", it)) }
-                    session.pricePerKwh?.let { LabeledRow("Pro kWh", Fmt.n("%.4f €", it)) }
+                    CardTitle(stringResource(R.string.session_detail_section_price))
+                    session.priceTotal?.let { LabeledRow(stringResource(R.string.session_detail_label_total), Fmt.n("%.2f €", it)) }
+                    session.pricePerKwh?.let { LabeledRow(stringResource(R.string.session_detail_label_per_kwh), Fmt.n("%.4f €", it)) }
                 }
             }
 
             SectionCard {
-                CardTitle("Quelle")
-                LabeledRow("Erfasst als", session.sourceValue.displayName)
-                LabeledRow("Status", if (session.needsReview) "Zu prüfen" else "Geprüft")
+                CardTitle(stringResource(R.string.session_detail_section_source))
+                LabeledRow(stringResource(R.string.session_detail_label_recorded_as), stringResource(session.sourceValue.labelRes))
+                LabeledRow(
+                    stringResource(R.string.session_detail_label_status),
+                    if (session.needsReview) stringResource(R.string.sessions_needs_review_content_description) else stringResource(R.string.session_detail_status_reviewed)
+                )
             }
 
             errorMessage?.let { Text(it, color = MaterialTheme.colorScheme.error) }

@@ -23,8 +23,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.dominiqueherbrigpersonalteam.lademonitor.R
 import com.dominiqueherbrigpersonalteam.lademonitor.data.settings.AppMode
 import com.dominiqueherbrigpersonalteam.lademonitor.data.settings.AppSettings
 
@@ -47,9 +49,9 @@ fun ModeSelectionScreen() {
                 modifier = Modifier.size(56.dp)
             )
             Spacer(Modifier.size(16.dp))
-            Text("Lademonitor", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
+            Text(stringResource(R.string.app_name), style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
             Text(
-                "Wie möchtest du die App nutzen?",
+                stringResource(R.string.mode_selection_question),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(top = 4.dp, bottom = 32.dp)
@@ -57,16 +59,16 @@ fun ModeSelectionScreen() {
 
             ModeOptionCard(
                 icon = Icons.Filled.PhoneAndroid,
-                title = "Nur lokal auf diesem Gerät",
-                description = "Alle Daten bleiben ausschließlich auf diesem Gerät. Kein Server, keine automatische Erkennung über Home Assistant, keine Synchronisation zwischen Geräten. Du kannst später jederzeit zu einem Server wechseln und alle lokalen Daten hochladen."
+                title = stringResource(R.string.mode_selection_local_title),
+                description = stringResource(R.string.mode_selection_local_description)
             ) { AppSettings.setAppMode(AppMode.LOCAL_ONLY) }
 
             Spacer(Modifier.size(16.dp))
 
             ModeOptionCard(
                 icon = Icons.Filled.Cloud,
-                title = "Mit eigenem Server verbinden",
-                description = "Daten liegen zentral auf deinem Lademonitor-Server, inkl. automatischer Ladevorgangs-Erkennung über Home Assistant und Zugriff vom Web-UI aus."
+                title = stringResource(R.string.mode_selection_server_title),
+                description = stringResource(R.string.mode_selection_server_description)
             ) { AppSettings.setAppMode(AppMode.SERVER) }
         }
     }

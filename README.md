@@ -1,6 +1,8 @@
 # Lademonitor – Android
 
-[![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](../Lademonitor-App-main/LICENSE)
+**Sprache:** Deutsch | [English](README.en.md)
+
+[![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](LICENSE)
 
 Android-App (Kotlin + Jetpack Compose) für [Lademonitor](https://github.com/iDomi94/Lademonitor-Server) –
 das Android-Pendant zur iOS-App. Portiert 1:1 die Architektur und Funktionen der

@@ -34,9 +34,11 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.dominiqueherbrigpersonalteam.lademonitor.R
 import com.dominiqueherbrigpersonalteam.lademonitor.data.model.Provider
 import com.dominiqueherbrigpersonalteam.lademonitor.data.model.ProviderPayload
 import com.dominiqueherbrigpersonalteam.lademonitor.data.repo.AppRepository
@@ -54,9 +56,10 @@ fun ProvidersSettingsScreen(navController: NavController) {
     var showAdd by remember { mutableStateOf(false) }
     var editing by remember { mutableStateOf<Provider?>(null) }
     var pendingDelete by remember { mutableStateOf<Provider?>(null) }
+    val serverAddressRequiredMessage = stringResource(R.string.error_server_address_required)
 
     suspend fun load() {
-        if (!AppSettings.isReadyForDataAccess) { errorMessage = "Bitte zuerst die Server-Adresse eintragen."; return }
+        if (!AppSettings.isReadyForDataAccess) { errorMessage = serverAddressRequiredMessage; return }
         try { providers = AppRepository.fetchProviders(); errorMessage = null }
         catch (e: Exception) { if (providers.isEmpty()) errorMessage = e.localizedMessage }
     }
@@ -64,9 +67,9 @@ fun ProvidersSettingsScreen(navController: NavController) {
 
     Scaffold(topBar = {
         TopAppBar(
-            title = { Text("Anbieter") },
-            navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Zurück") } },
-            actions = { IconButton(onClick = { showAdd = true }) { Icon(Icons.Filled.Add, "Neu") } }
+            title = { Text(stringResource(R.string.settings_nav_providers)) },
+            navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.action_back)) } },
+            actions = { IconButton(onClick = { showAdd = true }) { Icon(Icons.Filled.Add, stringResource(R.string.sessions_add_content_description)) } }
         )
     }) { padding ->
         LazyColumn(Modifier.padding(padding).fillMaxSize()) {
@@ -81,7 +84,7 @@ fun ProvidersSettingsScreen(navController: NavController) {
                         ).joinToString(" · ")
                         if (prices.isNotEmpty()) Text(prices, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
-                    IconButton(onClick = { pendingDelete = provider }) { Icon(Icons.Filled.Delete, "Löschen", tint = MaterialTheme.colorScheme.error) }
+                    IconButton(onClick = { pendingDelete = provider }) { Icon(Icons.Filled.Delete, stringResource(R.string.action_delete), tint = MaterialTheme.colorScheme.error) }
                 }
                 HorizontalDivider()
             }
@@ -94,15 +97,15 @@ fun ProvidersSettingsScreen(navController: NavController) {
     pendingDelete?.let { p ->
         AlertDialog(
             onDismissRequest = { pendingDelete = null },
-            title = { Text("Anbieter löschen?") },
-            text = { Text("„${p.name}“ wird gelöscht.") },
+            title = { Text(stringResource(R.string.provider_delete_confirm_title)) },
+            text = { Text(stringResource(R.string.provider_delete_confirm_message, p.name)) },
             confirmButton = {
                 TextButton(onClick = {
                     val target = p; pendingDelete = null
                     scope.launch { runCatching { AppRepository.deleteProvider(target.id) }; load() }
-                }) { Text("Löschen", color = MaterialTheme.colorScheme.error) }
+                }) { Text(stringResource(R.string.action_delete), color = MaterialTheme.colorScheme.error) }
             },
-            dismissButton = { TextButton(onClick = { pendingDelete = null }) { Text("Abbrechen") } }
+            dismissButton = { TextButton(onClick = { pendingDelete = null }) { Text(stringResource(R.string.action_cancel)) } }
         )
     }
 }
@@ -142,17 +145,17 @@ fun AddEditProviderModal(provider: Provider?, onDismiss: () -> Unit, onSaved: (P
     FullScreenModal(onDismiss = onDismiss) {
         Scaffold(topBar = {
             TopAppBar(
-                title = { Text(if (isEditing) "Anbieter bearbeiten" else "Neuer Anbieter") },
-                navigationIcon = { TextButton(onClick = onDismiss) { Text("Abbrechen") } },
-                actions = { TextButton(onClick = { save() }, enabled = !isSaving && canSave) { Text(if (isSaving) "Speichert…" else "Speichern") } }
+                title = { Text(if (isEditing) stringResource(R.string.provider_edit_title) else stringResource(R.string.provider_add_title)) },
+                navigationIcon = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } },
+                actions = { TextButton(onClick = { save() }, enabled = !isSaving && canSave) { Text(if (isSaving) stringResource(R.string.action_saving) else stringResource(R.string.action_save)) } }
             )
         }) { padding ->
             Column(Modifier.padding(padding).padding(16.dp).fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("Name") }, singleLine = true, modifier = Modifier.fillMaxWidth())
-                OutlinedTextField(value = priceAc, onValueChange = { priceAc = it }, label = { Text("Preis AC/kWh (€, optional)") }, singleLine = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), modifier = Modifier.fillMaxWidth())
-                OutlinedTextField(value = priceDc, onValueChange = { priceDc = it }, label = { Text("Preis DC/kWh (€, optional)") }, singleLine = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), modifier = Modifier.fillMaxWidth())
-                Text("Diese Preise dienen als Vorschlag und werden bei jedem Ladevorgang mit Preis automatisch aktualisiert.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                OutlinedTextField(value = notes, onValueChange = { notes = it }, label = { Text("Notizen (optional)") }, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text(stringResource(R.string.field_name)) }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(value = priceAc, onValueChange = { priceAc = it }, label = { Text(stringResource(R.string.provider_field_price_ac)) }, singleLine = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(value = priceDc, onValueChange = { priceDc = it }, label = { Text(stringResource(R.string.provider_field_price_dc)) }, singleLine = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), modifier = Modifier.fillMaxWidth())
+                Text(stringResource(R.string.provider_price_hint), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                OutlinedTextField(value = notes, onValueChange = { notes = it }, label = { Text(stringResource(R.string.field_notes)) }, modifier = Modifier.fillMaxWidth())
                 errorMessage?.let { Text(it, color = MaterialTheme.colorScheme.error) }
             }
         }

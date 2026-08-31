@@ -1,5 +1,7 @@
 package com.dominiqueherbrigpersonalteam.lademonitor.data.model
 
+import androidx.annotation.StringRes
+import com.dominiqueherbrigpersonalteam.lademonitor.R
 import com.dominiqueherbrigpersonalteam.lademonitor.data.remote.ServerDate
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
@@ -22,10 +24,10 @@ enum class ChargingType(val raw: String) {
     }
 }
 
-enum class SessionSource(val raw: String, val displayName: String) {
-    MANUAL("manual", "Manuell"),
-    AUTOMATIC("automatic", "Automatisch"),
-    IMPORT("import", "Import");
+enum class SessionSource(val raw: String, @param:StringRes val labelRes: Int) {
+    MANUAL("manual", R.string.session_source_manual),
+    AUTOMATIC("automatic", R.string.session_source_automatic),
+    IMPORT("import", R.string.session_source_import);
 
     companion object {
         fun from(raw: String?): SessionSource = entries.firstOrNull { it.raw == raw } ?: MANUAL
@@ -40,28 +42,28 @@ enum class SessionSource(val raw: String, val displayName: String) {
 enum class ConsumptionMethod(
     val raw: String,
     val marker: String,
-    val shortLabel: String,
-    val explanation: String
+    @param:StringRes val shortLabelRes: Int,
+    @param:StringRes val explanationRes: Int
 ) {
     FULL_CHARGE_INTERVAL(
-        "full_charge_interval", "🎯", "Exakt (Vollladung)",
-        "Exakter Wert aus einem Vollladungs-Intervall – der genaueste Fall (Goldstandard)."
+        "full_charge_interval", "🎯", R.string.consumption_method_full_charge_interval_label,
+        R.string.consumption_method_full_charge_interval_explanation
     ),
     SOC_CORRECTED(
-        "soc_corrected", "✓", "SoC-korrigiert",
-        "SoC-korrigiert auf Basis einer gemessenen kWh-Angabe."
+        "soc_corrected", "✓", R.string.consumption_method_soc_corrected_label,
+        R.string.consumption_method_soc_corrected_explanation
     ),
     NAIVE(
-        "naive", "~", "Einfach (ohne SoC)",
-        "Einfache kWh/km-Rechnung ohne SoC-Korrektur (keine SoC-Werte verfügbar)."
+        "naive", "~", R.string.consumption_method_naive_label,
+        R.string.consumption_method_naive_explanation
     ),
     ESTIMATED_ENERGY(
-        "estimated_energy", "~", "Geschätzte Energie",
-        "Basiert auf einer geschätzten Energiemenge statt eines gemessenen kWh-Werts – Fehler können sich hier häufen."
+        "estimated_energy", "~", R.string.consumption_method_estimated_energy_label,
+        R.string.consumption_method_estimated_energy_explanation
     ),
     UNAVAILABLE(
-        "unavailable", "", "Nicht verfügbar",
-        "Keine Verbrauchsberechnung möglich (z. B. erster Ladevorgang oder fehlender Kilometerstand)."
+        "unavailable", "", R.string.consumption_method_unavailable_label,
+        R.string.consumption_method_unavailable_explanation
     );
 
     companion object {
@@ -226,31 +228,25 @@ data class MonthlyStat(
     @Json(name = "session_count") val sessionCount: Int,
     @Json(name = "avg_consumption_kwh_per_100km") val avgConsumptionKwhPer100km: Double? = null
 ) {
-    /** "YYYY-MM" -> "August 2026", matching the iOS displayMonth. */
+    /**
+     * "YYYY-MM" -> "August 2026" (or "August 2026" -> "August 2026" in English), matching the
+     * iOS displayMonth. Uses the device's current locale so it follows the system language
+     * automatically, the same way the rest of the app's localized strings do.
+     */
     val displayMonth: String
         get() {
-            val parts = month.split("-")
-            val idx = parts.getOrNull(1)?.toIntOrNull()
-            if (parts.size != 2 || idx == null || idx !in 1..12) return month
-            val names = listOf(
-                "Januar", "Februar", "März", "April", "Mai", "Juni",
-                "Juli", "August", "September", "Oktober", "November", "Dezember"
-            )
-            return "${names[idx - 1]} ${parts[0]}"
+            val parsed = runCatching { java.time.YearMonth.parse(month) }.getOrNull() ?: return month
+            val formatter = java.time.format.DateTimeFormatter.ofPattern("MMMM yyyy", java.util.Locale.getDefault())
+            return parsed.format(formatter)
         }
 
-    /** "YYYY-MM" -> "Aug '26" for chart axes. */
+    /** "YYYY-MM" -> "Aug '26" for chart axes, localized to the device's current locale. */
     val shortMonth: String
         get() {
-            val parts = month.split("-")
-            val idx = parts.getOrNull(1)?.toIntOrNull()
-            if (parts.size != 2 || idx == null || idx !in 1..12) return month
-            val names = listOf(
-                "Jan", "Feb", "Mär", "Apr", "Mai", "Jun",
-                "Jul", "Aug", "Sep", "Okt", "Nov", "Dez"
-            )
-            val yearSuffix = parts[0].takeLast(2)
-            return "${names[idx - 1]} '$yearSuffix"
+            val parsed = runCatching { java.time.YearMonth.parse(month) }.getOrNull() ?: return month
+            val formatter = java.time.format.DateTimeFormatter.ofPattern("MMM", java.util.Locale.getDefault())
+            val yearSuffix = (parsed.year % 100).toString().padStart(2, '0')
+            return "${parsed.format(formatter)} '$yearSuffix"
         }
 }
 

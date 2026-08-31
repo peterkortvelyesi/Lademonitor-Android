@@ -1,5 +1,7 @@
 package com.dominiqueherbrigpersonalteam.lademonitor.data.remote
 
+import com.dominiqueherbrigpersonalteam.lademonitor.LademonitorApp
+import com.dominiqueherbrigpersonalteam.lademonitor.R
 import com.squareup.moshi.FromJson
 import com.squareup.moshi.JsonQualifier
 import com.squareup.moshi.ToJson
@@ -44,7 +46,9 @@ object ServerDateAdapter {
         runCatching {
             return LocalDateTime.parse(raw + "T00:00:00").atZone(zone).toInstant().toEpochMilli()
         }
-        throw IllegalArgumentException("Unbekanntes Datumsformat: $raw")
+        throw IllegalArgumentException(
+            LademonitorApp.appContext.getString(R.string.server_date_error_unknown_format, raw)
+        )
     }
 
     @ToJson

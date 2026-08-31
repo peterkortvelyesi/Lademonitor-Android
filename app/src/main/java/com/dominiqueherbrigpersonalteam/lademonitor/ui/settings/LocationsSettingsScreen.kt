@@ -49,9 +49,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.dominiqueherbrigpersonalteam.lademonitor.R
 import com.dominiqueherbrigpersonalteam.lademonitor.data.location.CurrentLocationProvider
 import com.dominiqueherbrigpersonalteam.lademonitor.data.model.ChargingLocation
 import com.dominiqueherbrigpersonalteam.lademonitor.data.model.GeocodeResult
@@ -75,9 +77,10 @@ fun LocationsSettingsScreen(navController: NavController) {
     var showAdd by remember { mutableStateOf(false) }
     var editing by remember { mutableStateOf<ChargingLocation?>(null) }
     var pendingDelete by remember { mutableStateOf<ChargingLocation?>(null) }
+    val serverAddressRequiredMessage = stringResource(R.string.error_server_address_required)
 
     suspend fun load() {
-        if (!AppSettings.isReadyForDataAccess) { errorMessage = "Bitte zuerst die Server-Adresse eintragen."; return }
+        if (!AppSettings.isReadyForDataAccess) { errorMessage = serverAddressRequiredMessage; return }
         try {
             coroutineScope {
                 val l = async { AppRepository.fetchLocations() }
@@ -91,9 +94,9 @@ fun LocationsSettingsScreen(navController: NavController) {
 
     Scaffold(topBar = {
         TopAppBar(
-            title = { Text("Ladeorte") },
-            navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Zurück") } },
-            actions = { IconButton(onClick = { showAdd = true }) { Icon(Icons.Filled.Add, "Neu") } }
+            title = { Text(stringResource(R.string.map_legend_locations)) },
+            navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.action_back)) } },
+            actions = { IconButton(onClick = { showAdd = true }) { Icon(Icons.Filled.Add, stringResource(R.string.sessions_add_content_description)) } }
         )
     }) { padding ->
         LazyColumn(Modifier.padding(padding).fillMaxSize()) {
@@ -105,12 +108,12 @@ fun LocationsSettingsScreen(navController: NavController) {
                         val providerName = providers.firstOrNull { it.id == location.defaultProviderId }?.name
                         val detail = listOfNotNull(
                             Fmt.n("%.5f", location.latitude) + ", " + Fmt.n("%.5f", location.longitude),
-                            "Radius ${location.radiusM} m",
+                            stringResource(R.string.location_radius_format, location.radiusM),
                             providerName
                         ).joinToString(" · ")
                         Text(detail, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
-                    IconButton(onClick = { pendingDelete = location }) { Icon(Icons.Filled.Delete, "Löschen", tint = MaterialTheme.colorScheme.error) }
+                    IconButton(onClick = { pendingDelete = location }) { Icon(Icons.Filled.Delete, stringResource(R.string.action_delete), tint = MaterialTheme.colorScheme.error) }
                 }
                 HorizontalDivider()
             }
@@ -123,15 +126,15 @@ fun LocationsSettingsScreen(navController: NavController) {
     pendingDelete?.let { l ->
         AlertDialog(
             onDismissRequest = { pendingDelete = null },
-            title = { Text("Ladeort löschen?") },
-            text = { Text("„${l.name}“ wird gelöscht.") },
+            title = { Text(stringResource(R.string.location_delete_confirm_title)) },
+            text = { Text(stringResource(R.string.location_delete_confirm_message, l.name)) },
             confirmButton = {
                 TextButton(onClick = {
                     val target = l; pendingDelete = null
                     scope.launch { runCatching { AppRepository.deleteLocation(target.id) }; load() }
-                }) { Text("Löschen", color = MaterialTheme.colorScheme.error) }
+                }) { Text(stringResource(R.string.action_delete), color = MaterialTheme.colorScheme.error) }
             },
-            dismissButton = { TextButton(onClick = { pendingDelete = null }) { Text("Abbrechen") } }
+            dismissButton = { TextButton(onClick = { pendingDelete = null }) { Text(stringResource(R.string.action_cancel)) } }
         )
     }
 }
@@ -164,6 +167,8 @@ fun AddEditLocationModal(
     var searchMessage by remember { mutableStateOf<String?>(null) }
     var isLocating by remember { mutableStateOf(false) }
     var providerMenu by remember { mutableStateOf(false) }
+    val searchNoResultsMessage = stringResource(R.string.location_search_no_results)
+    val searchFailedMessage = stringResource(R.string.location_search_failed)
 
     val parsedLat = latitude.replace(",", ".").toDoubleOrNull()
     val parsedLon = longitude.replace(",", ".").toDoubleOrNull()
@@ -190,8 +195,8 @@ fun AddEditLocationModal(
             try {
                 val results = AppRepository.forwardGeocode(q)
                 searchResults = results
-                if (results.isEmpty()) searchMessage = "Keine Treffer. Bitte die Koordinaten unten manuell eintragen."
-            } catch (e: Exception) { searchResults = emptyList(); searchMessage = "Suche fehlgeschlagen." }
+                if (results.isEmpty()) searchMessage = searchNoResultsMessage
+            } catch (e: Exception) { searchResults = emptyList(); searchMessage = searchFailedMessage }
             isSearching = false
         }
     }
@@ -218,18 +223,18 @@ fun AddEditLocationModal(
     FullScreenModal(onDismiss = onDismiss) {
         Scaffold(topBar = {
             TopAppBar(
-                title = { Text(if (isEditing) "Ladeort bearbeiten" else "Neuer Ladeort") },
-                navigationIcon = { TextButton(onClick = onDismiss) { Text("Abbrechen") } },
-                actions = { TextButton(onClick = { save() }, enabled = !isSaving && canSave) { Text(if (isSaving) "Speichert…" else "Speichern") } }
+                title = { Text(if (isEditing) stringResource(R.string.location_edit_title) else stringResource(R.string.location_add_title)) },
+                navigationIcon = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } },
+                actions = { TextButton(onClick = { save() }, enabled = !isSaving && canSave) { Text(if (isSaving) stringResource(R.string.action_saving) else stringResource(R.string.action_save)) } }
             )
         }) { padding ->
             Column(Modifier.padding(padding).padding(16.dp).fillMaxWidth().verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("Name") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text(stringResource(R.string.field_name)) }, singleLine = true, modifier = Modifier.fillMaxWidth())
 
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                    OutlinedTextField(value = addressQuery, onValueChange = { addressQuery = it }, label = { Text("Adresse suchen") }, singleLine = true, modifier = Modifier.weight(1f))
+                    OutlinedTextField(value = addressQuery, onValueChange = { addressQuery = it }, label = { Text(stringResource(R.string.location_field_address_search)) }, singleLine = true, modifier = Modifier.weight(1f))
                     if (isSearching) CircularProgressIndicator(Modifier.padding(8.dp).height(24.dp), strokeWidth = 2.dp)
-                    else IconButton(onClick = { search() }, enabled = addressQuery.isNotBlank()) { Icon(Icons.Filled.Search, "Suchen") }
+                    else IconButton(onClick = { search() }, enabled = addressQuery.isNotBlank()) { Icon(Icons.Filled.Search, stringResource(R.string.action_search)) }
                 }
                 searchMessage?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
                 searchResults.forEach { r ->
@@ -241,26 +246,26 @@ fun AddEditLocationModal(
 
                 OutlinedButton(onClick = { permissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION) }, enabled = !isLocating, modifier = Modifier.fillMaxWidth()) {
                     Icon(Icons.Filled.LocationOn, contentDescription = null)
-                    Text("  Aktueller Standort")
+                    Text(stringResource(R.string.location_current_location_action))
                     if (isLocating) { Spacer(Modifier.weight(1f)); CircularProgressIndicator(Modifier.height(20.dp), strokeWidth = 2.dp) }
                 }
 
-                OutlinedTextField(value = latitude, onValueChange = { latitude = it }, label = { Text("Breite (lat)") }, singleLine = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), modifier = Modifier.fillMaxWidth())
-                OutlinedTextField(value = longitude, onValueChange = { longitude = it }, label = { Text("Länge (lon)") }, singleLine = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), modifier = Modifier.fillMaxWidth())
-                OutlinedTextField(value = radius, onValueChange = { radius = it.filter { c -> c.isDigit() } }, label = { Text("Radius (m)") }, singleLine = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), modifier = Modifier.fillMaxWidth())
-                Text("Der Radius bestimmt, wie nah ein Ladevorgang sein muss, um automatisch diesem Ort zugeordnet zu werden.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                OutlinedTextField(value = latitude, onValueChange = { latitude = it }, label = { Text(stringResource(R.string.location_field_latitude)) }, singleLine = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(value = longitude, onValueChange = { longitude = it }, label = { Text(stringResource(R.string.location_field_longitude)) }, singleLine = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(value = radius, onValueChange = { radius = it.filter { c -> c.isDigit() } }, label = { Text(stringResource(R.string.location_field_radius)) }, singleLine = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), modifier = Modifier.fillMaxWidth())
+                Text(stringResource(R.string.location_radius_hint), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
 
-                Text("Standard-Anbieter", style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(top = 8.dp))
+                Text(stringResource(R.string.location_field_default_provider), style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(top = 8.dp))
                 Box {
                     OutlinedButton(onClick = { providerMenu = true }, modifier = Modifier.fillMaxWidth()) {
-                        Text(providerList.firstOrNull { it.id == defaultProviderId }?.name ?: "– keiner –")
+                        Text(providerList.firstOrNull { it.id == defaultProviderId }?.name ?: stringResource(R.string.provider_none_selected))
                     }
                     DropdownMenu(expanded = providerMenu, onDismissRequest = { providerMenu = false }) {
-                        DropdownMenuItem(text = { Text("– keiner –") }, onClick = { defaultProviderId = null; providerMenu = false })
+                        DropdownMenuItem(text = { Text(stringResource(R.string.provider_none_selected)) }, onClick = { defaultProviderId = null; providerMenu = false })
                         providerList.forEach { p ->
                             DropdownMenuItem(text = { Text(p.name) }, onClick = { defaultProviderId = p.id; providerMenu = false })
                         }
-                        DropdownMenuItem(text = { Text("Neuer Anbieter…") }, onClick = { providerMenu = false; showAddProvider = true })
+                        DropdownMenuItem(text = { Text(stringResource(R.string.provider_add_new_ellipsis)) }, onClick = { providerMenu = false; showAddProvider = true })
                     }
                 }
 

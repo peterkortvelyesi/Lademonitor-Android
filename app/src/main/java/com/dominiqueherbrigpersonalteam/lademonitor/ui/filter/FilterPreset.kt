@@ -1,5 +1,7 @@
 package com.dominiqueherbrigpersonalteam.lademonitor.ui.filter
 
+import androidx.annotation.StringRes
+import com.dominiqueherbrigpersonalteam.lademonitor.R
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.ZoneId
@@ -9,14 +11,14 @@ import java.time.ZoneId
  * concrete epoch-millis range on selection; the end is always end-of-today so sessions logged today
  * are never cut off by a mid-day time boundary.
  */
-enum class FilterPreset(val title: String) {
-    LAST_7_DAYS("Letzte 7 Tage"),
-    LAST_30_DAYS("Letzte 30 Tage"),
-    LAST_90_DAYS("Letzte 90 Tage"),
-    LAST_MONTH("Letzter Monat"),
-    MONTH_TO_DATE("Monat bis jetzt"),
-    YEAR_TO_DATE("Jahr bis jetzt"),
-    LAST_YEAR("Letztes Jahr");
+enum class FilterPreset(@param:StringRes val titleRes: Int) {
+    LAST_7_DAYS(R.string.filter_preset_last_7_days),
+    LAST_30_DAYS(R.string.filter_preset_last_30_days),
+    LAST_90_DAYS(R.string.filter_preset_last_90_days),
+    LAST_MONTH(R.string.filter_preset_last_month),
+    MONTH_TO_DATE(R.string.filter_preset_month_to_date),
+    YEAR_TO_DATE(R.string.filter_preset_year_to_date),
+    LAST_YEAR(R.string.filter_preset_last_year);
 
     fun range(zone: ZoneId = ZoneId.systemDefault(), today: LocalDate = LocalDate.now(zone)): LongRange {
         fun startMillis(date: LocalDate): Long =

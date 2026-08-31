@@ -1,5 +1,7 @@
 package com.dominiqueherbrigpersonalteam.lademonitor.data.repo
 
+import com.dominiqueherbrigpersonalteam.lademonitor.LademonitorApp
+import com.dominiqueherbrigpersonalteam.lademonitor.R
 import com.dominiqueherbrigpersonalteam.lademonitor.data.model.ChargingSession
 import com.dominiqueherbrigpersonalteam.lademonitor.data.model.ChargingType
 import com.dominiqueherbrigpersonalteam.lademonitor.data.model.MonthlyStat
@@ -62,11 +64,12 @@ object LocalStatsCalculator {
             }
         }
 
-        // Provider split; sessions without provider -> "Ohne Anbieter".
+        // Provider split; sessions without provider -> localized "No provider" placeholder.
+        val noProviderLabel = LademonitorApp.appContext.getString(R.string.stats_no_provider)
         val providerKwh = HashMap<String, Double>()
         val providerCost = HashMap<String, Double>()
         for (session in sorted) {
-            val name = providers.firstOrNull { it.id == session.providerId }?.name ?: "Ohne Anbieter"
+            val name = providers.firstOrNull { it.id == session.providerId }?.name ?: noProviderLabel
             providerKwh[name] = (providerKwh[name] ?: 0.0) + (session.energyKwh ?: 0.0)
             providerCost[name] = (providerCost[name] ?: 0.0) + (session.priceTotal ?: 0.0)
         }

@@ -28,9 +28,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.dominiqueherbrigpersonalteam.lademonitor.R
 import com.dominiqueherbrigpersonalteam.lademonitor.ui.common.Fmt
 import java.time.Instant
 import java.time.LocalTime
@@ -43,7 +45,7 @@ fun FilterIconButton(onClick: () -> Unit) {
     IconButton(onClick = onClick) {
         Icon(
             if (range != null) Icons.Filled.FilterList else Icons.Outlined.FilterList,
-            contentDescription = "Filter"
+            contentDescription = stringResource(R.string.filter_content_description)
         )
     }
 }
@@ -64,10 +66,10 @@ fun FilterSheet(onDismiss: () -> Unit) {
 
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheetState) {
         Column(Modifier.padding(horizontal = 20.dp).padding(bottom = 32.dp)) {
-            Text("Filter", style = MaterialTheme.typography.titleLarge)
+            Text(stringResource(R.string.filter_sheet_title), style = MaterialTheme.typography.titleLarge)
 
             Text(
-                "Zeitraum",
+                stringResource(R.string.filter_date_range_section),
                 style = MaterialTheme.typography.labelLarge,
                 fontWeight = FontWeight.SemiBold,
                 modifier = Modifier.padding(top = 16.dp, bottom = 4.dp)
@@ -77,24 +79,24 @@ fun FilterSheet(onDismiss: () -> Unit) {
                     onClick = { SessionFilter.setDateRange(preset.range()); onDismiss() },
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text(preset.title, modifier = Modifier.fillMaxWidth())
+                    Text(stringResource(preset.titleRes), modifier = Modifier.fillMaxWidth())
                 }
             }
 
             HorizontalDivider(Modifier.padding(vertical = 12.dp))
 
             Text(
-                "Eigener Zeitraum",
+                stringResource(R.string.filter_custom_range_section),
                 style = MaterialTheme.typography.labelLarge,
                 fontWeight = FontWeight.SemiBold,
                 modifier = Modifier.padding(bottom = 8.dp)
             )
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 OutlinedButton(onClick = { showStartPicker = true }, modifier = Modifier.weight(1f)) {
-                    Text("Von: " + Fmt.dateTimeShort(customStart).substringBefore(","))
+                    Text(stringResource(R.string.filter_from, Fmt.dateTimeShort(customStart).substringBefore(",")))
                 }
                 OutlinedButton(onClick = { showEndPicker = true }, modifier = Modifier.weight(1f)) {
-                    Text("Bis: " + Fmt.dateTimeShort(customEnd).substringBefore(","))
+                    Text(stringResource(R.string.filter_to, Fmt.dateTimeShort(customEnd).substringBefore(",")))
                 }
             }
             Button(
@@ -107,13 +109,13 @@ fun FilterSheet(onDismiss: () -> Unit) {
                     onDismiss()
                 },
                 modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
-            ) { Text("Anwenden") }
+            ) { Text(stringResource(R.string.action_apply)) }
 
             if (range != null) {
                 TextButton(
                     onClick = { SessionFilter.clear(); onDismiss() },
                     modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
-                ) { Text("Filter löschen", color = MaterialTheme.colorScheme.error) }
+                ) { Text(stringResource(R.string.filter_clear), color = MaterialTheme.colorScheme.error) }
             }
         }
     }
@@ -126,9 +128,9 @@ fun FilterSheet(onDismiss: () -> Unit) {
                 TextButton(onClick = {
                     state.selectedDateMillis?.let { customStart = it }
                     showStartPicker = false
-                }) { Text("OK") }
+                }) { Text(stringResource(R.string.action_ok)) }
             },
-            dismissButton = { TextButton(onClick = { showStartPicker = false }) { Text("Abbrechen") } }
+            dismissButton = { TextButton(onClick = { showStartPicker = false }) { Text(stringResource(R.string.action_cancel)) } }
         ) { DatePicker(state = state) }
     }
 
@@ -140,9 +142,9 @@ fun FilterSheet(onDismiss: () -> Unit) {
                 TextButton(onClick = {
                     state.selectedDateMillis?.let { customEnd = it }
                     showEndPicker = false
-                }) { Text("OK") }
+                }) { Text(stringResource(R.string.action_ok)) }
             },
-            dismissButton = { TextButton(onClick = { showEndPicker = false }) { Text("Abbrechen") } }
+            dismissButton = { TextButton(onClick = { showEndPicker = false }) { Text(stringResource(R.string.action_cancel)) } }
         ) { DatePicker(state = state) }
     }
 }

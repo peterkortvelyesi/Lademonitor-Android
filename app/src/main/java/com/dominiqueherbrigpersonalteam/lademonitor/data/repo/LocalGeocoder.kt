@@ -1,5 +1,7 @@
 package com.dominiqueherbrigpersonalteam.lademonitor.data.repo
 
+import com.dominiqueherbrigpersonalteam.lademonitor.LademonitorApp
+import com.dominiqueherbrigpersonalteam.lademonitor.R
 import com.dominiqueherbrigpersonalteam.lademonitor.data.model.GeocodeResult
 import com.dominiqueherbrigpersonalteam.lademonitor.data.remote.Json
 import com.squareup.moshi.Json as MoshiJson
@@ -40,10 +42,12 @@ object LocalGeocoder {
             ?.addQueryParameter("limit", "10")
             ?.build() ?: return@withContext emptyList()
 
+        // Ask Nominatim for results in the device's current language so search results (e.g.
+        // place names) match the app's own localization instead of always coming back in German.
         val request = Request.Builder()
             .url(url)
             .header("User-Agent", "Lademonitor-Android")
-            .header("Accept-Language", "de")
+            .header("Accept-Language", java.util.Locale.getDefault().language)
             .get()
             .build()
 
@@ -57,7 +61,7 @@ object LocalGeocoder {
                 val lon = r.lon?.toDoubleOrNull()
                 if (lat == null || lon == null) return@mapNotNull null
                 GeocodeResult(
-                    displayName = r.displayName ?: "Unbekannter Ort",
+                    displayName = r.displayName ?: LademonitorApp.appContext.getString(R.string.geocoder_unknown_place),
                     latitude = lat,
                     longitude = lon
                 )

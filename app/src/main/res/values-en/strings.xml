@@ -1,0 +1,298 @@
+<resources>
+    <string name="app_name">Lademonitor</string>
+
+    <!-- Models.kt: SessionSource -->
+    <string name="session_source_manual">Manual</string>
+    <string name="session_source_automatic">Automatic</string>
+    <string name="session_source_import">Import</string>
+
+    <!-- Models.kt: ConsumptionMethod -->
+    <string name="consumption_method_full_charge_interval_label">Exact (full charge)</string>
+    <string name="consumption_method_full_charge_interval_explanation">Exact value from a full-charge interval – the most accurate case (gold standard).</string>
+    <string name="consumption_method_soc_corrected_label">SoC-corrected</string>
+    <string name="consumption_method_soc_corrected_explanation">SoC-corrected based on a measured kWh value.</string>
+    <string name="consumption_method_naive_label">Simple (without SoC)</string>
+    <string name="consumption_method_naive_explanation">Simple kWh/km calculation without SoC correction (no SoC values available).</string>
+    <string name="consumption_method_estimated_energy_label">Estimated energy</string>
+    <string name="consumption_method_estimated_energy_explanation">Based on an estimated energy amount instead of a measured kWh value – errors can accumulate here.</string>
+    <string name="consumption_method_unavailable_label">Not available</string>
+    <string name="consumption_method_unavailable_explanation">No consumption calculation possible (e.g. first charging session or missing odometer reading).</string>
+
+    <!-- Shared entity names -->
+    <string name="entity_vehicle">Vehicle</string>
+
+    <!-- LocalStatsCalculator.kt -->
+    <string name="stats_no_provider">No provider</string>
+
+    <!-- CurrentLocationProvider.kt -->
+    <string name="location_error_permission_denied">Location access not allowed. Please enable the location permission for Lademonitor in the Android settings.</string>
+    <string name="location_error_unavailable">Could not determine location. Please enable GPS/location and try again.</string>
+
+    <!-- ApiException.kt / ApiClient.kt -->
+    <string name="api_error_not_configured">No server URL configured. Please enter one in Settings.</string>
+    <string name="api_error_invalid_response">Invalid response from server.</string>
+    <string name="api_error_server">Server error (%1$d): %2$s</string>
+    <string name="api_error_decoding">Could not read response: %1$s</string>
+    <string name="api_error_network">Connection failed: %1$s</string>
+    <string name="api_error_unknown">unknown</string>
+
+    <!-- LocalGeocoder.kt -->
+    <string name="geocoder_unknown_place">Unknown place</string>
+
+    <!-- LocalDataStore.kt -->
+    <string name="local_store_error_not_found">Entry was not found.</string>
+
+    <!-- SyncService.kt -->
+    <string name="sync_error_offline">Offline – changes are buffered and uploaded next time.</string>
+    <string name="sync_error_unresolved_reference">Could not resolve %1$s.</string>
+    <string name="sync_error_item_vehicle">Vehicle "%1$s": %2$s</string>
+    <string name="sync_error_item_provider">Provider "%1$s": %2$s</string>
+    <string name="sync_error_item_location">Charging location "%1$s": %2$s</string>
+    <string name="sync_error_item_session">Charging session: %1$s</string>
+
+    <!-- ui/common/Components.kt -->
+    <string name="error_state_title">No connection</string>
+    <string name="error_state_retry">Try again</string>
+
+    <!-- ui/common/Format.kt -->
+    <string name="relative_time_just_now">just now</string>
+    <string name="relative_time_minutes">%1$d min ago</string>
+    <string name="relative_time_hours">%1$d h ago</string>
+    <string name="relative_time_days">%1$d d ago</string>
+
+    <!-- ui/LademonitorRoot.kt: bottom navigation tabs -->
+    <string name="tab_dashboard">Dashboard</string>
+    <string name="tab_sessions">Sessions</string>
+    <string name="tab_map">Map</string>
+    <string name="tab_settings">Settings</string>
+
+    <!-- ui/auth/AuthScreen.kt -->
+    <string name="auth_error_passwords_mismatch">The passwords do not match.</string>
+    <string name="auth_action_register">Register</string>
+    <string name="auth_action_login">Log in</string>
+    <string name="auth_server_address_label">Server address</string>
+    <string name="auth_server_address_placeholder">https://lademonitor.example.com</string>
+    <string name="auth_server_address_hint">Domain of your Lademonitor server. "https://" is added automatically.</string>
+    <string name="auth_username_label">Username</string>
+    <string name="auth_password_label">Password</string>
+    <string name="auth_password_confirm_label">Repeat password</string>
+    <string name="auth_validation_hint">Username at least 3 characters, password at least 8 characters.</string>
+    <string name="auth_toggle_to_login">Already have an account? Log in</string>
+    <string name="auth_toggle_to_register">New here? Create an account</string>
+    <string name="auth_use_local_only">Use local only instead</string>
+
+    <!-- ui/auth/ModeSelectionScreen.kt -->
+    <string name="mode_selection_question">How would you like to use the app?</string>
+    <string name="mode_selection_local_title">Local only on this device</string>
+    <string name="mode_selection_local_description">All data stays exclusively on this device. No server, no automatic detection via Home Assistant, no sync between devices. You can switch to a server at any time later and upload all local data.</string>
+    <string name="mode_selection_server_title">Connect to your own server</string>
+    <string name="mode_selection_server_description">Data is stored centrally on your Lademonitor server, including automatic charging-session detection via Home Assistant and access from the web UI.</string>
+
+    <!-- Shared generic actions -->
+    <string name="action_ok">OK</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_apply">Apply</string>
+
+    <!-- ui/filter/FilterPreset.kt -->
+    <string name="filter_preset_last_7_days">Last 7 days</string>
+    <string name="filter_preset_last_30_days">Last 30 days</string>
+    <string name="filter_preset_last_90_days">Last 90 days</string>
+    <string name="filter_preset_last_month">Last month</string>
+    <string name="filter_preset_month_to_date">Month to date</string>
+    <string name="filter_preset_year_to_date">Year to date</string>
+    <string name="filter_preset_last_year">Last year</string>
+
+    <!-- ui/filter/FilterSheet.kt -->
+    <string name="filter_content_description">Filter</string>
+    <string name="filter_sheet_title">Filter</string>
+    <string name="filter_date_range_section">Date range</string>
+    <string name="filter_custom_range_section">Custom range</string>
+    <string name="filter_from">From: %1$s</string>
+    <string name="filter_to">To: %1$s</string>
+    <string name="filter_clear">Clear filter</string>
+
+    <!-- Shared -->
+    <string name="action_refresh">Refresh</string>
+    <string name="error_server_url_required">Please enter the server address in Settings first.</string>
+
+    <!-- ui/dashboard/DashboardScreen.kt -->
+    <string name="dashboard_stat_sessions">Charging sessions</string>
+    <string name="dashboard_stat_total_kwh">Total kWh</string>
+    <string name="dashboard_stat_total_cost">Total cost</string>
+    <string name="dashboard_stat_avg_price">Avg. price/kWh</string>
+    <string name="dashboard_stat_avg_consumption">Avg. consumption/100km</string>
+    <string name="dashboard_stat_price_per_100km">Price/100km</string>
+    <string name="dashboard_stat_km_driven">Kilometers driven</string>
+    <string name="dashboard_section_ac_dc">AC / DC split</string>
+    <string name="dashboard_section_kwh_by_provider">kWh by provider</string>
+    <string name="dashboard_section_paid_by_provider">Paid by provider</string>
+    <string name="dashboard_section_cost_by_month">Cost by month</string>
+    <string name="dashboard_section_kwh_by_month">kWh by month</string>
+    <string name="dashboard_provider_other">Other</string>
+
+    <!-- Shared -->
+    <string name="action_delete">Delete</string>
+    <string name="action_confirm">Confirm</string>
+    <string name="vehicle_create_action">Add vehicle</string>
+
+    <!-- ui/sessions/SessionsListScreen.kt -->
+    <string name="sessions_add_content_description">New</string>
+    <string name="sessions_empty_state">No charging sessions yet</string>
+    <string name="sessions_no_vehicle_title">No vehicle yet</string>
+    <string name="sessions_no_vehicle_message">Before you can log a charging session, you need to add at least one vehicle.</string>
+    <string name="sessions_needs_review_content_description">Needs review</string>
+    <string name="session_soc_range">SoC %1$d → %2$d%%</string>
+    <string name="session_soc_from">SoC from %1$d%%</string>
+    <string name="session_soc_to">SoC to %1$d%%</string>
+
+    <!-- ui/map/MapScreen.kt -->
+    <string name="map_empty_state">No locations yet</string>
+    <string name="map_legend_locations">Locations</string>
+
+    <!-- Shared -->
+    <string name="action_cannot_be_undone">This cannot be undone.</string>
+
+    <!-- ui/settings/SettingsScreen.kt -->
+    <string name="settings_section_mode">Mode</string>
+    <string name="settings_label_current">Current</string>
+    <string name="settings_mode_local">Local only</string>
+    <string name="settings_mode_server">Server</string>
+    <string name="settings_switch_to_server_action">Switch to server</string>
+    <string name="settings_mode_local_hint">All data stays exclusively on this device.</string>
+    <string name="settings_switch_to_local_action">Switch to \"Local only\"</string>
+    <string name="settings_section_account">Account</string>
+    <string name="settings_label_logged_in_as">Logged in as</string>
+    <string name="settings_logging_out">Logging out…</string>
+    <string name="settings_logout_action">Log out</string>
+    <string name="settings_section_connection">Connection</string>
+    <string name="settings_nav_connection">Server &amp; connection</string>
+    <string name="settings_section_sync">Sync</string>
+    <string name="settings_label_last_synced">Last synced</string>
+    <string name="settings_not_synced_yet">Not synced yet</string>
+    <string name="settings_syncing">Syncing…</string>
+    <string name="settings_sync_now_action">Sync now</string>
+    <string name="settings_section_management">Management</string>
+    <string name="settings_nav_vehicles">Vehicles</string>
+    <string name="settings_nav_providers">Providers</string>
+    <string name="settings_reset_action">Reset all local data</string>
+    <string name="settings_reset_hint_server">Deletes vehicles, providers, charging locations and charging sessions on this device. Data already synced remains on the server and is fetched back automatically afterwards – changes not yet uploaded are lost.</string>
+    <string name="settings_reset_hint_local">Irreversibly deletes vehicles, providers, charging locations and charging sessions from this device. There is no other copy.</string>
+    <string name="settings_switch_to_server_title">Switch to server?</string>
+    <string name="settings_switch_to_server_message">After signing in, your existing local data will be uploaded to the server automatically. You can switch back to \"Local only\" at any time.</string>
+    <string name="settings_switch_action">Switch</string>
+    <string name="settings_reset_confirm_title">Delete all local data?</string>
+
+    <!-- Shared -->
+    <string name="action_back">Back</string>
+
+    <!-- ui/settings/ConnectionSettingsScreen.kt -->
+    <string name="connection_status_not_ok">Server responded, but status is not \"ok\".</string>
+    <string name="connection_test_action">Test connection</string>
+    <string name="connection_success">Connection successful</string>
+    <string name="connection_failed">Failed</string>
+
+    <!-- Shared -->
+    <string name="error_server_address_required">Please enter the server address first.</string>
+    <string name="action_save">Save</string>
+    <string name="action_saving">Saving…</string>
+    <string name="field_name">Name</string>
+    <string name="field_active">Active</string>
+
+    <!-- ui/settings/VehiclesSettingsScreen.kt -->
+    <string name="vehicle_inactive_badge">inactive</string>
+    <string name="vehicle_delete_confirm_title">Delete vehicle?</string>
+    <string name="vehicle_delete_confirm_message">Warning: this will also irreversibly delete ALL charging sessions associated with this vehicle.</string>
+    <string name="vehicle_edit_title">Edit vehicle</string>
+    <string name="vehicle_add_title">New vehicle</string>
+    <string name="vehicle_field_external_id">External ID (e.g. enyaq)</string>
+    <string name="vehicle_external_id_hint">The external ID cannot be changed after creation.</string>
+    <string name="vehicle_field_brand">Brand (optional)</string>
+    <string name="vehicle_field_model">Model (optional)</string>
+    <string name="vehicle_field_battery_capacity">Battery capacity (kWh, optional)</string>
+
+    <!-- Shared -->
+    <string name="field_notes">Notes (optional)</string>
+
+    <!-- ui/settings/ProvidersSettingsScreen.kt -->
+    <string name="provider_delete_confirm_title">Delete provider?</string>
+    <string name="provider_delete_confirm_message">"%1$s" will be deleted.</string>
+    <string name="provider_edit_title">Edit provider</string>
+    <string name="provider_add_title">New provider</string>
+    <string name="provider_field_price_ac">AC price/kWh (€, optional)</string>
+    <string name="provider_field_price_dc">DC price/kWh (€, optional)</string>
+    <string name="provider_price_hint">These prices serve as a suggestion and are updated automatically with every charging session that has a price.</string>
+
+    <!-- Shared -->
+    <string name="action_search">Search</string>
+    <string name="provider_none_selected">– none –</string>
+    <string name="provider_add_new_ellipsis">New provider…</string>
+
+    <!-- ui/settings/LocationsSettingsScreen.kt -->
+    <string name="location_radius_format">Radius %1$d m</string>
+    <string name="location_delete_confirm_title">Delete charging location?</string>
+    <string name="location_delete_confirm_message">"%1$s" will be deleted.</string>
+    <string name="location_search_no_results">No results. Please enter the coordinates below manually.</string>
+    <string name="location_search_failed">Search failed.</string>
+    <string name="location_edit_title">Edit charging location</string>
+    <string name="location_add_title">New charging location</string>
+    <string name="location_field_address_search">Search address</string>
+    <string name="location_current_location_action">"  Current location"</string>
+    <string name="location_field_latitude">Latitude</string>
+    <string name="location_field_longitude">Longitude</string>
+    <string name="location_field_radius">Radius (m)</string>
+    <string name="location_radius_hint">The radius determines how close a charging session must be to be automatically assigned to this location.</string>
+    <string name="location_field_default_provider">Default provider</string>
+
+    <!-- Shared -->
+    <string name="action_close">Close</string>
+    <string name="action_edit">Edit</string>
+    <string name="session_singular">Charging session</string>
+
+    <!-- ui/sessions/SessionDetailScreen.kt -->
+    <string name="session_detail_soc_range">%1$d → %2$d%%</string>
+    <string name="session_detail_soc_from">from %1$d%%</string>
+    <string name="session_detail_soc_to">to %1$d%%</string>
+    <string name="session_detail_section_vehicle_time">Vehicle &amp; time</string>
+    <string name="session_detail_label_start">Start</string>
+    <string name="session_detail_label_charging_type">Charging type</string>
+    <string name="session_detail_section_location_provider">Location &amp; provider</string>
+    <string name="session_detail_label_provider">Provider</string>
+    <string name="session_detail_label_place">Place</string>
+    <string name="session_detail_section_battery_energy">Battery &amp; energy</string>
+    <string name="session_detail_label_soc">SoC</string>
+    <string name="session_detail_estimated_suffix"> (estimated)</string>
+    <string name="session_detail_label_kwh">kWh</string>
+    <string name="session_detail_label_odometer">Odometer reading</string>
+    <string name="session_detail_label_consumption">Consumption</string>
+    <string name="session_detail_section_price">Price</string>
+    <string name="session_detail_label_total">Total</string>
+    <string name="session_detail_label_per_kwh">Per kWh</string>
+    <string name="session_detail_section_source">Source</string>
+    <string name="session_detail_label_recorded_as">Recorded as</string>
+    <string name="session_detail_label_status">Status</string>
+    <string name="session_detail_status_reviewed">Reviewed</string>
+
+    <!-- Shared -->
+    <string name="field_optional_placeholder">optional</string>
+
+    <!-- ui/sessions/AddEditSessionScreen.kt -->
+    <string name="add_session_search_no_results">No results. Please search coordinates manually or use \"Current location\".</string>
+    <string name="session_add_title">New charging session</string>
+    <string name="session_select_vehicle_placeholder">Select vehicle</string>
+    <string name="add_session_section_provider_type">Provider &amp; type</string>
+    <string name="add_session_soc_toggle_label">Enter SoC values</string>
+    <string name="add_session_soc_end_label">End</string>
+    <string name="add_session_section_energy_price">Energy &amp; price</string>
+    <string name="add_session_kwh_placeholder">automatic if empty</string>
+    <string name="add_session_field_price_per_kwh">Price/kWh (€)</string>
+    <string name="add_session_field_total_price">Total price (€)</string>
+    <string name="add_session_section_misc">Other</string>
+    <string name="add_session_field_location_optional">Charging location (optional)</string>
+    <string name="add_session_field_odometer_optional">Odometer reading (optional)</string>
+    <string name="add_session_section_position">Position</string>
+    <string name="add_session_use_location_action">Use from charging location</string>
+    <string name="add_session_coordinates_format">Coordinates: %1$s, %2$s</string>
+
+    <!-- data/remote/ServerDate.kt -->
+    <string name="server_date_error_unknown_format">Unknown date format: %1$s</string>
+</resources>

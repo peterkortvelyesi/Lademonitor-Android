@@ -27,10 +27,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
+import com.dominiqueherbrigpersonalteam.lademonitor.R
 import com.dominiqueherbrigpersonalteam.lademonitor.data.repo.LocalDataStore
 import com.dominiqueherbrigpersonalteam.lademonitor.data.repo.SyncService
 import com.dominiqueherbrigpersonalteam.lademonitor.data.session.SessionManager
@@ -56,85 +58,88 @@ fun SettingsScreen(navController: NavController) {
     var showReset by remember { mutableStateOf(false) }
     var resetError by remember { mutableStateOf<String?>(null) }
 
-    Scaffold(topBar = { TopAppBar(title = { Text("Einstellungen") }) }) { padding ->
+    Scaffold(topBar = { TopAppBar(title = { Text(stringResource(R.string.tab_settings)) }) }) { padding ->
         Column(
             Modifier.padding(padding).fillMaxWidth().verticalScroll(rememberScrollState()).padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             // Mode
             SectionCard {
-                Header("Modus")
-                LabeledRow("Aktuell", if (appMode == AppMode.LOCAL_ONLY) "Nur lokal" else "Server")
+                Header(stringResource(R.string.settings_section_mode))
+                LabeledRow(
+                    stringResource(R.string.settings_label_current),
+                    if (appMode == AppMode.LOCAL_ONLY) stringResource(R.string.settings_mode_local) else stringResource(R.string.settings_mode_server)
+                )
                 if (appMode == AppMode.LOCAL_ONLY) {
-                    ActionText("Zu Server wechseln") { showServerSwitch = true }
+                    ActionText(stringResource(R.string.settings_switch_to_server_action)) { showServerSwitch = true }
                     Text(
-                        "Alle Daten liegen ausschließlich auf diesem Gerät.",
+                        stringResource(R.string.settings_mode_local_hint),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 } else {
-                    ActionText("Zu \"Nur lokal\" wechseln") { AppSettings.setAppMode(AppMode.LOCAL_ONLY) }
+                    ActionText(stringResource(R.string.settings_switch_to_local_action)) { AppSettings.setAppMode(AppMode.LOCAL_ONLY) }
                 }
             }
 
             if (appMode == AppMode.SERVER) {
                 SectionCard {
-                    Header("Konto")
-                    user?.let { LabeledRow("Angemeldet als", it.username) }
+                    Header(stringResource(R.string.settings_section_account))
+                    user?.let { LabeledRow(stringResource(R.string.settings_label_logged_in_as), it.username) }
                     if (isLoggingOut) {
                         Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
-                            Text("Abmelden…", color = MaterialTheme.colorScheme.error)
+                            Text(stringResource(R.string.settings_logging_out), color = MaterialTheme.colorScheme.error)
                             CircularProgressIndicator(Modifier.padding(start = 8.dp).height(18.dp), strokeWidth = 2.dp)
                         }
                     } else {
-                        ActionText("Abmelden", color = MaterialTheme.colorScheme.error) {
+                        ActionText(stringResource(R.string.settings_logout_action), color = MaterialTheme.colorScheme.error) {
                             scope.launch { isLoggingOut = true; SessionManager.logout(); isLoggingOut = false }
                         }
                     }
                 }
 
                 SectionCard {
-                    Header("Verbindung")
-                    NavRow("Server & Verbindung") { navController.navigate("settings/connection") }
+                    Header(stringResource(R.string.settings_section_connection))
+                    NavRow(stringResource(R.string.settings_nav_connection)) { navController.navigate("settings/connection") }
                 }
 
                 SectionCard {
-                    Header("Synchronisierung")
-                    if (lastSyncDate != null) LabeledRow("Zuletzt synchronisiert", Fmt.relative(lastSyncDate!!))
-                    else Text("Noch nicht synchronisiert", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Header(stringResource(R.string.settings_section_sync))
+                    if (lastSyncDate != null) LabeledRow(stringResource(R.string.settings_label_last_synced), Fmt.relative(lastSyncDate!!))
+                    else Text(stringResource(R.string.settings_not_synced_yet), color = MaterialTheme.colorScheme.onSurfaceVariant)
                     lastSyncError?.let {
                         Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.tertiary)
                     }
                     if (isSyncing) {
                         Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
-                            Text("Synchronisiert…")
+                            Text(stringResource(R.string.settings_syncing))
                             CircularProgressIndicator(Modifier.padding(start = 8.dp).height(18.dp), strokeWidth = 2.dp)
                         }
                     } else {
-                        ActionText("Jetzt synchronisieren") { scope.launch { SyncService.syncNow() } }
+                        ActionText(stringResource(R.string.settings_sync_now_action)) { scope.launch { SyncService.syncNow() } }
                     }
                 }
             }
 
             SectionCard {
-                Header("Verwaltung")
-                NavRow("Ladeorte") { navController.navigate("settings/locations") }
+                Header(stringResource(R.string.settings_section_management))
+                NavRow(stringResource(R.string.map_legend_locations)) { navController.navigate("settings/locations") }
                 HorizontalDivider()
-                NavRow("Fahrzeuge") { navController.navigate("settings/vehicles") }
+                NavRow(stringResource(R.string.settings_nav_vehicles)) { navController.navigate("settings/vehicles") }
                 HorizontalDivider()
-                NavRow("Anbieter") { navController.navigate("settings/providers") }
+                NavRow(stringResource(R.string.settings_nav_providers)) { navController.navigate("settings/providers") }
             }
 
             SectionCard {
-                ActionText("Alle lokalen Daten zurücksetzen", color = MaterialTheme.colorScheme.error) {
+                ActionText(stringResource(R.string.settings_reset_action), color = MaterialTheme.colorScheme.error) {
                     showReset = true
                 }
                 resetError?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error) }
                 Text(
                     if (appMode == AppMode.SERVER)
-                        "Löscht Fahrzeuge, Anbieter, Ladeorte und Ladevorgänge auf diesem Gerät. Bereits synchronisierte Daten bleiben auf dem Server und werden danach automatisch zurückgeholt – noch nicht hochgeladene Änderungen gehen verloren."
+                        stringResource(R.string.settings_reset_hint_server)
                     else
-                        "Löscht Fahrzeuge, Anbieter, Ladeorte und Ladevorgänge unwiderruflich von diesem Gerät. Es gibt keine weitere Kopie.",
+                        stringResource(R.string.settings_reset_hint_local),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(top = 8.dp)
@@ -146,18 +151,18 @@ fun SettingsScreen(navController: NavController) {
     if (showServerSwitch) {
         AlertDialog(
             onDismissRequest = { showServerSwitch = false },
-            title = { Text("Zu Server wechseln?") },
-            text = { Text("Nach der Anmeldung werden deine bisherigen lokalen Daten automatisch zum Server hochgeladen. Du kannst jederzeit zurück zu \"Nur lokal\" wechseln.") },
-            confirmButton = { TextButton(onClick = { showServerSwitch = false; AppSettings.setAppMode(AppMode.SERVER) }) { Text("Wechseln") } },
-            dismissButton = { TextButton(onClick = { showServerSwitch = false }) { Text("Abbrechen") } }
+            title = { Text(stringResource(R.string.settings_switch_to_server_title)) },
+            text = { Text(stringResource(R.string.settings_switch_to_server_message)) },
+            confirmButton = { TextButton(onClick = { showServerSwitch = false; AppSettings.setAppMode(AppMode.SERVER) }) { Text(stringResource(R.string.settings_switch_action)) } },
+            dismissButton = { TextButton(onClick = { showServerSwitch = false }) { Text(stringResource(R.string.action_cancel)) } }
         )
     }
 
     if (showReset) {
         AlertDialog(
             onDismissRequest = { showReset = false },
-            title = { Text("Alle lokalen Daten löschen?") },
-            text = { Text("Das kann nicht rückgängig gemacht werden.") },
+            title = { Text(stringResource(R.string.settings_reset_confirm_title)) },
+            text = { Text(stringResource(R.string.action_cannot_be_undone)) },
             confirmButton = {
                 TextButton(onClick = {
                     showReset = false
@@ -168,9 +173,9 @@ fun SettingsScreen(navController: NavController) {
                             if (appMode == AppMode.SERVER) SyncService.syncNow()
                         } catch (e: Exception) { resetError = e.localizedMessage }
                     }
-                }) { Text("Löschen", color = MaterialTheme.colorScheme.error) }
+                }) { Text(stringResource(R.string.action_delete), color = MaterialTheme.colorScheme.error) }
             },
-            dismissButton = { TextButton(onClick = { showReset = false }) { Text("Abbrechen") } }
+            dismissButton = { TextButton(onClick = { showReset = false }) { Text(stringResource(R.string.action_cancel)) } }
         )
     }
 }

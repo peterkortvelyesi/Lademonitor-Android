@@ -50,9 +50,11 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import com.dominiqueherbrigpersonalteam.lademonitor.R
 import com.dominiqueherbrigpersonalteam.lademonitor.data.location.CurrentLocationProvider
 import com.dominiqueherbrigpersonalteam.lademonitor.data.model.ChargingLocation
 import com.dominiqueherbrigpersonalteam.lademonitor.data.model.ChargingSession
@@ -117,6 +119,8 @@ fun AddEditSessionScreen(
     var showTimePicker by remember { mutableStateOf(false) }
     var providerMenu by remember { mutableStateOf(false) }
     var locationMenu by remember { mutableStateOf(false) }
+    val searchNoResultsMessage = stringResource(R.string.add_session_search_no_results)
+    val searchFailedMessage = stringResource(R.string.location_search_failed)
 
     fun suggestPrice() {
         if (isEditing || pricePerKwh.isNotEmpty()) return
@@ -150,9 +154,9 @@ fun AddEditSessionScreen(
             try {
                 val results = AppRepository.forwardGeocode(q)
                 searchResults = results
-                if (results.isEmpty()) searchMessage = "Keine Treffer. Bitte Koordinaten manuell suchen oder \"Aktueller Standort\" verwenden."
+                if (results.isEmpty()) searchMessage = searchNoResultsMessage
             } catch (e: Exception) {
-                searchResults = emptyList(); searchMessage = "Suche fehlgeschlagen."
+                searchResults = emptyList(); searchMessage = searchFailedMessage
             }
             isSearching = false
         }
@@ -192,11 +196,11 @@ fun AddEditSessionScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(if (isEditing) "Bearbeiten" else "Neuer Ladevorgang") },
-                navigationIcon = { TextButton(onClick = onDismiss) { Text("Abbrechen") } },
+                title = { Text(if (isEditing) stringResource(R.string.action_edit) else stringResource(R.string.session_add_title)) },
+                navigationIcon = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } },
                 actions = {
                     TextButton(onClick = { save() }, enabled = !isSaving && vehicleId.isNotEmpty()) {
-                        Text(if (isSaving) "Speichert…" else "Speichern")
+                        Text(if (isSaving) stringResource(R.string.action_saving) else stringResource(R.string.action_save))
                     }
                 }
             )
@@ -208,11 +212,11 @@ fun AddEditSessionScreen(
         ) {
             // Vehicle & time
             SectionCard {
-                FieldLabel("Fahrzeug & Zeit")
+                FieldLabel(stringResource(R.string.session_detail_section_vehicle_time))
                 Box {
                     var vehicleMenu by remember { mutableStateOf(false) }
                     OutlinedButton(onClick = { vehicleMenu = true }, modifier = Modifier.fillMaxWidth()) {
-                        Text(vehicles.firstOrNull { it.id == vehicleId }?.name ?: "Fahrzeug wählen")
+                        Text(vehicles.firstOrNull { it.id == vehicleId }?.name ?: stringResource(R.string.session_select_vehicle_placeholder))
                     }
                     DropdownMenu(expanded = vehicleMenu, onDismissRequest = { vehicleMenu = false }) {
                         vehicles.forEach { v ->
@@ -232,17 +236,17 @@ fun AddEditSessionScreen(
 
             // Provider & type
             SectionCard {
-                FieldLabel("Anbieter & Typ")
+                FieldLabel(stringResource(R.string.add_session_section_provider_type))
                 Box {
                     OutlinedButton(onClick = { providerMenu = true }, modifier = Modifier.fillMaxWidth()) {
-                        Text(providerList.firstOrNull { it.id == providerId }?.name ?: "– keiner –")
+                        Text(providerList.firstOrNull { it.id == providerId }?.name ?: stringResource(R.string.provider_none_selected))
                     }
                     DropdownMenu(expanded = providerMenu, onDismissRequest = { providerMenu = false }) {
-                        DropdownMenuItem(text = { Text("– keiner –") }, onClick = { providerId = null; providerMenu = false; suggestPrice() })
+                        DropdownMenuItem(text = { Text(stringResource(R.string.provider_none_selected)) }, onClick = { providerId = null; providerMenu = false; suggestPrice() })
                         providerList.forEach { p ->
                             DropdownMenuItem(text = { Text(p.name) }, onClick = { providerId = p.id; providerMenu = false; suggestPrice() })
                         }
-                        DropdownMenuItem(text = { Text("Neuer Anbieter…") }, onClick = { providerMenu = false; showAddProvider = true })
+                        DropdownMenuItem(text = { Text(stringResource(R.string.provider_add_new_ellipsis)) }, onClick = { providerMenu = false; showAddProvider = true })
                     }
                 }
                 Spacer(Modifier.height(8.dp))
@@ -260,33 +264,33 @@ fun AddEditSessionScreen(
             // SoC
             SectionCard {
                 Row(Modifier.fillMaxWidth(), verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
-                    Text("SoC-Werte angeben", Modifier.weight(1f))
+                    Text(stringResource(R.string.add_session_soc_toggle_label), Modifier.weight(1f))
                     Switch(checked = socEnabled, onCheckedChange = { socEnabled = it })
                 }
                 if (socEnabled) {
-                    SoCSlider("Start", socStart, Orange) { socStart = it }
-                    SoCSlider("Ende", socEnd, Green) { socEnd = it }
+                    SoCSlider(stringResource(R.string.session_detail_label_start), socStart, Orange) { socStart = it }
+                    SoCSlider(stringResource(R.string.add_session_soc_end_label), socEnd, Green) { socEnd = it }
                 }
             }
 
             // Energy & price
             SectionCard {
-                FieldLabel("Energie & Preis")
-                DecimalField("kWh", energyKwh, "automatisch, falls leer") { energyKwh = it }
-                DecimalField("Preis/kWh (€)", pricePerKwh, "optional") { pricePerKwh = it }
-                DecimalField("Gesamtpreis (€)", priceTotal, "optional") { priceTotal = it }
+                FieldLabel(stringResource(R.string.add_session_section_energy_price))
+                DecimalField(stringResource(R.string.session_detail_label_kwh), energyKwh, stringResource(R.string.add_session_kwh_placeholder)) { energyKwh = it }
+                DecimalField(stringResource(R.string.add_session_field_price_per_kwh), pricePerKwh, stringResource(R.string.field_optional_placeholder)) { pricePerKwh = it }
+                DecimalField(stringResource(R.string.add_session_field_total_price), priceTotal, stringResource(R.string.field_optional_placeholder)) { priceTotal = it }
             }
 
             // Misc
             SectionCard {
-                FieldLabel("Sonstiges")
+                FieldLabel(stringResource(R.string.add_session_section_misc))
                 OutlinedTextField(
                     value = geocodedPlace, onValueChange = { geocodedPlace = it },
-                    label = { Text("Ladeort (optional)") }, singleLine = true, modifier = Modifier.fillMaxWidth()
+                    label = { Text(stringResource(R.string.add_session_field_location_optional)) }, singleLine = true, modifier = Modifier.fillMaxWidth()
                 )
                 OutlinedTextField(
                     value = odometerKm, onValueChange = { odometerKm = it.filter { c -> c.isDigit() } },
-                    label = { Text("Kilometerstand (optional)") }, singleLine = true,
+                    label = { Text(stringResource(R.string.add_session_field_odometer_optional)) }, singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
                 )
@@ -294,15 +298,15 @@ fun AddEditSessionScreen(
 
             // Position
             SectionCard {
-                FieldLabel("Position")
+                FieldLabel(stringResource(R.string.add_session_section_position))
                 Row(Modifier.fillMaxWidth(), verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
                     OutlinedTextField(
                         value = addressQuery, onValueChange = { addressQuery = it },
-                        label = { Text("Adresse suchen") }, singleLine = true, modifier = Modifier.weight(1f)
+                        label = { Text(stringResource(R.string.location_field_address_search)) }, singleLine = true, modifier = Modifier.weight(1f)
                     )
                     if (isSearching) CircularProgressIndicator(Modifier.padding(8.dp).height(24.dp), strokeWidth = 2.dp)
                     else IconButton(onClick = { search() }, enabled = addressQuery.isNotBlank()) {
-                        Icon(Icons.Filled.Search, contentDescription = "Suchen")
+                        Icon(Icons.Filled.Search, contentDescription = stringResource(R.string.action_search))
                     }
                 }
                 searchMessage?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
@@ -320,13 +324,13 @@ fun AddEditSessionScreen(
                 ) {
                     Icon(Icons.Filled.LocationOn, contentDescription = null)
                     Spacer(Modifier.height(0.dp))
-                    Text("  Aktueller Standort")
+                    Text(stringResource(R.string.location_current_location_action))
                     if (isLocating) { Spacer(Modifier.weight(1f)); CircularProgressIndicator(Modifier.height(20.dp), strokeWidth = 2.dp) }
                 }
                 if (locations.isNotEmpty()) {
                     Box {
                         OutlinedButton(onClick = { locationMenu = true }, modifier = Modifier.fillMaxWidth().padding(top = 8.dp)) {
-                            Text("Von Ladeort übernehmen")
+                            Text(stringResource(R.string.add_session_use_location_action))
                         }
                         DropdownMenu(expanded = locationMenu, onDismissRequest = { locationMenu = false }) {
                             locations.forEach { l ->
@@ -339,7 +343,7 @@ fun AddEditSessionScreen(
                     }
                 }
                 if (latitude.isNotEmpty() || longitude.isNotEmpty()) {
-                    Text("Koordinaten: $latitude, $longitude", style = MaterialTheme.typography.bodySmall,
+                    Text(stringResource(R.string.add_session_coordinates_format, latitude, longitude), style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 8.dp))
                 }
             }
@@ -368,9 +372,9 @@ fun AddEditSessionScreen(
                         startTime = date.atTime(time).atZone(zone).toInstant().toEpochMilli()
                     }
                     showDatePicker = false
-                }) { Text("OK") }
+                }) { Text(stringResource(R.string.action_ok)) }
             },
-            dismissButton = { TextButton(onClick = { showDatePicker = false }) { Text("Abbrechen") } }
+            dismissButton = { TextButton(onClick = { showDatePicker = false }) { Text(stringResource(R.string.action_cancel)) } }
         ) { DatePicker(state = state) }
     }
 
@@ -384,9 +388,9 @@ fun AddEditSessionScreen(
                     val date = Instant.ofEpochMilli(startTime).atZone(zone).toLocalDate()
                     startTime = date.atTime(LocalTime.of(state.hour, state.minute)).atZone(zone).toInstant().toEpochMilli()
                     showTimePicker = false
-                }) { Text("OK") }
+                }) { Text(stringResource(R.string.action_ok)) }
             },
-            dismissButton = { TextButton(onClick = { showTimePicker = false }) { Text("Abbrechen") } }
+            dismissButton = { TextButton(onClick = { showTimePicker = false }) { Text(stringResource(R.string.action_cancel)) } }
         ) {
             Box(Modifier.fillMaxWidth().padding(16.dp), contentAlignment = androidx.compose.ui.Alignment.Center) {
                 TimePicker(state = state)

@@ -15,10 +15,12 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.dominiqueherbrigpersonalteam.lademonitor.R
 
 /** A full-screen modal that mirrors the iOS `.sheet` presentation for forms and detail views. */
 @Composable
@@ -40,7 +42,7 @@ fun ErrorState(message: String, onRetry: () -> Unit, modifier: Modifier = Modifi
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Text("Keine Verbindung", style = MaterialTheme.typography.titleMedium)
+        Text(stringResource(R.string.error_state_title), style = MaterialTheme.typography.titleMedium)
         Text(
             message,
             style = MaterialTheme.typography.bodyMedium,
@@ -48,7 +50,7 @@ fun ErrorState(message: String, onRetry: () -> Unit, modifier: Modifier = Modifi
             textAlign = TextAlign.Center,
             modifier = Modifier.padding(vertical = 12.dp)
         )
-        Button(onClick = onRetry) { Text("Erneut versuchen") }
+        Button(onClick = onRetry) { Text(stringResource(R.string.error_state_retry)) }
     }
 }
 
